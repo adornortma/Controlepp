@@ -194,6 +194,17 @@ export const Camera: React.FC<CameraProps> = ({ onCapture, aspectRatioLabel }) =
                 {aspectRatioLabel}
               </div>
             )}
+
+            <button
+              type="button"
+              onClick={() => {
+                setUsingFallback(true);
+                setTimeout(() => triggerFileInput(), 150);
+              }}
+              className="absolute top-4 right-4 bg-amber-500/90 hover:bg-amber-600 text-white backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-extrabold border border-amber-400/20 active:scale-95 transition shadow-lg tracking-wider"
+            >
+              ¿PANTALLA NEGRA? USAR CÁMARA NATIVA
+            </button>
           </div>
 
           {/* Panel de Controles Inferior */}
