@@ -131,10 +131,6 @@ export default function RegistroPage() {
         toast.error('Debe escribir su Central');
         return;
       }
-      if (!liderNombre) {
-        toast.error('Debe seleccionar su Líder a cargo');
-        return;
-      }
     }
     if (step === 1 && !fotoAdvertencia) {
       toast.error('La fotografía de la advertencia es obligatoria');
@@ -172,7 +168,7 @@ export default function RegistroPage() {
   };
 
   const handleSave = async () => {
-    if (!tecnicoNombre.trim() || !distrito || !central.trim() || !liderNombre || !fotoAdvertencia || !fotoNumeroSerie || !numeroSerie.trim()) {
+    if (!tecnicoNombre.trim() || !distrito || !central.trim() || !fotoAdvertencia || !fotoNumeroSerie || !numeroSerie.trim()) {
       toast.error('Faltan completar campos obligatorios o fotografías');
       return;
     }
@@ -429,7 +425,7 @@ export default function RegistroPage() {
                   {/* Líder */}
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                      <Users className="h-3.5 w-3.5 text-indigo-500" /> Líder a Cargo
+                      <Users className="h-3.5 w-3.5 text-indigo-500" /> Líder a Cargo (Opcional)
                     </label>
                     {cargandoLideres ? (
                       <div className="text-xs text-slate-400 py-2 flex items-center gap-1.5">
@@ -442,7 +438,7 @@ export default function RegistroPage() {
                         onChange={(e) => setLiderNombre(e.target.value)}
                         className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-medium"
                       >
-                        <option value="">Seleccione su Líder...</option>
+                        <option value="">Seleccione su Líder (Opcional)...</option>
                         {lideres.map((l) => (
                           <option key={l.id} value={l.nombre}>
                             {l.nombre}
