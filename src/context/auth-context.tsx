@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setUser(null);
         setProfile(null);
-        if (pathname !== '/login') {
+        if (pathname && pathname.startsWith('/admin')) {
           router.push('/login');
         }
       }
