@@ -29,16 +29,20 @@ export const Camera: React.FC<CameraProps> = ({ onCapture, aspectRatioLabel }) =
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          facingMode: 'environment'
         },
         audio: false
       });
 
       streamRef.current = stream;
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+        const video = videoRef.current;
+        video.srcObject = stream;
+        video.onloadedmetadata = () => {
+          video.play().catch((err) => {
+            console.error("Error intentando reproducir el vídeo de la cámara:", err);
+          });
+        };
       }
       setHasPermission(true);
       setIsCameraActive(true);
