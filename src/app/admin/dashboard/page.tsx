@@ -91,14 +91,15 @@ export default function AdminDashboardPage() {
     const cleanTexto = filtroTexto.toLowerCase().trim();
     if (!cleanTexto) return matchEstado;
 
-    const liderNombre = (reg.usuarios as any)?.nombre?.toLowerCase() || '';
-    const liderEmail = (reg.usuarios as any)?.email?.toLowerCase() || '';
+    const liderNombre = (reg as any).lider_nombre?.toLowerCase() || '';
+    const centralNombre = (reg as any).central?.toLowerCase() || '';
+    const distritoNombre = (reg as any).distrito?.toLowerCase() || '';
     const matchTexto =
       reg.tecnico_nombre.toLowerCase().includes(cleanTexto) ||
-      reg.tecnico_legajo.toLowerCase().includes(cleanTexto) ||
+      centralNombre.includes(cleanTexto) ||
+      distritoNombre.includes(cleanTexto) ||
       reg.numero_serie.toLowerCase().includes(cleanTexto) ||
       liderNombre.includes(cleanTexto) ||
-      liderEmail.includes(cleanTexto) ||
       (reg.observaciones && reg.observaciones.toLowerCase().includes(cleanTexto));
 
     return matchEstado && matchTexto;
@@ -112,7 +113,7 @@ export default function AdminDashboardPage() {
 
   // Agrupaciones para las métricas
   const registrosPorLider = registros.reduce((acc: Record<string, number>, reg) => {
-    const nombre = (reg.usuarios as any)?.nombre || 'Desconocido';
+    const nombre = (reg as any).lider_nombre || 'Desconocido';
     acc[nombre] = (acc[nombre] || 0) + 1;
     return acc;
   }, {});
@@ -360,10 +361,10 @@ export default function AdminDashboardPage() {
                       <tr key={reg.id} className="hover:bg-slate-50/50 transition">
                         <td className="py-4 px-6">
                           <span className="font-bold text-slate-950 block">{reg.tecnico_nombre}</span>
-                          <span className="text-xs text-slate-500 font-mono">Legajo: {reg.tecnico_legajo}</span>
+                          <span className="text-xs text-slate-500 font-mono">Central: {(reg as any).central} | {reg.distrito}</span>
                         </td>
                         <td className="py-4 px-6 text-slate-600">
-                          {(reg.usuarios as any)?.nombre}
+                          {(reg as any).lider_nombre}
                         </td>
                         <td className="py-4 px-6 text-slate-600">
                           <span className="block">
@@ -444,15 +445,14 @@ export default function AdminDashboardPage() {
                     <p className="text-base font-extrabold text-slate-950 mt-0.5">
                       {registroSeleccionado.tecnico_nombre}
                     </p>
-                    <p className="text-xs font-mono text-slate-500">Legajo: {registroSeleccionado.tecnico_legajo}</p>
+                    <p className="text-xs text-slate-500">Central: {(registroSeleccionado as any).central} | Distrito: {(registroSeleccionado as any).distrito}</p>
                   </div>
                   <hr className="border-slate-100" />
                   <div>
-                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Líder que Registró</h4>
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Líder a Cargo</h4>
                     <p className="text-sm font-semibold text-slate-800 mt-0.5">
-                      {(registroSeleccionado.usuarios as any)?.nombre}
+                      {(registroSeleccionado as any).lider_nombre}
                     </p>
-                    <p className="text-xs text-slate-500">{(registroSeleccionado.usuarios as any)?.email}</p>
                   </div>
                   <hr className="border-slate-100" />
                   <div>

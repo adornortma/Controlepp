@@ -28,11 +28,14 @@ export interface Tecnico {
 
 export interface Registro {
   id: string;
-  tecnico_id: string;
-  usuario_id: string;
+  tecnico_id: string | null;
+  usuario_id: string | null;
   numero_serie: string;
   tecnico_nombre: string;
-  tecnico_legajo: string;
+  tecnico_legajo: string | null;
+  central?: string | null;
+  lider_nombre?: string | null;
+  distrito?: string | null;
   estado: 'pendiente' | 'aprobado' | 'observado';
   observaciones: string | null;
   created_at: string;
@@ -40,6 +43,7 @@ export interface Registro {
   usuarios?: Usuario;
   fotos?: Foto[];
 }
+
 
 export interface Foto {
   id: string;

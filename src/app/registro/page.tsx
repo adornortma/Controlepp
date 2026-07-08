@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
-import { supabase, Tecnico } from '@/lib/supabase';
-import { SearchBar } from '@/components/search-bar';
+import { supabase, Usuario } from '@/lib/supabase';
 import { Camera } from '@/components/camera';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
@@ -17,31 +16,32 @@ import {
   CheckCircle2,
   AlertCircle,
   FileText,
-  LogOut,
   Save,
   Trash2,
-  Info,
-  Camera as CameraIcon
+  User,
+  Landmark,
+  Building,
+  Users,
+  Camera as CameraIcon,
+  Shield
 } from 'lucide-react';
 
 export default function RegistroPage() {
-  const { user, profile, loading, logout } = useAuth();
+  const { profile } = useAuth();
   const router = useRouter();
 
-  // Redirigir a login si no está autenticado, o a admin si es administrador
-  useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        router.replace('/login');
-      } else if (profile && profile.rol === 'administrador') {
-        router.replace('/admin/dashboard');
-      }
-    }
-  }, [user, profile, loading, router]);
+  // Estados del Formulario del Técnico (Paso 0)
+  const [tecnicoNombre, setTecnicoNombre] = useState('');
+  const [distrito, setDistrito] = useState('');
+  const [central, setCentral] = useState('');
+  const [liderNombre, setLiderNombre] = useState('');
+
+  // Lista de líderes obtenidos de la base de datos
+  const [lideres, setLideres] = useState<Usuario[]>([]);
+  const [cargandoLideres, setCargandoLideres] = useState(true);
 
   // Estados del Asistente
   const [step, setStep] = useState(0); // 0 a 5
-  const [selectedTecnico, setSelectedTecnico] = useState<Tecnico | null>(null);
   const [fotoAdvertencia, setFotoAdvertencia] = useState<string | null>(null);
   const [fotoNumeroSerie, setFotoNumeroSerie] = useState<string | null>(null);
   const [fotoEscalera, setFotoEscalera] = useState<string | null>(null);
@@ -53,23 +53,50 @@ export default function RegistroPage() {
   // Carga de cámara activa en cada paso
   const [showCamera, setShowCamera] = useState(false);
 
-  if (loading || !profile) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 min-h-screen">
-        <span className="h-8 w-8 border-4 border-slate-300 border-t-indigo-600 rounded-full animate-spin"></span>
-        <p className="mt-4 text-sm font-medium text-slate-500">Cargando...</p>
-      </div>
-    );
-  }
+  // Cargar líderes activos de Supabase
+  useEffect(() => {
+    const fetchLideres = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('usuarios')
+          .select('*')
+          .eq('activo', true)
+          .order('nombre', { ascending: true });
+
+        if (error) throw error;
+        setLideres(data || []);
+      } catch (err) {
+        console.error('Error fetching leaders:', err);
+      } finally {
+        setCargandoLideres(false);
+      }
+    };
+
+    fetchLideres();
+  }, []);
 
   // Título e instrucciones de cada paso
-  const totalSteps = 6; // Técnico, Advertencia, Serie, Escalera, Obs, Confirmación
+  const totalSteps = 6; // Formulario Técnico, Advertencia, Serie, Escalera, Obs, Confirmación
   const stepProgress = Math.round(((step + 1) / totalSteps) * 100);
 
   const avanzar = () => {
-    if (step === 0 && !selectedTecnico) {
-      toast.error('Debe seleccionar un técnico para continuar');
-      return;
+    if (step === 0) {
+      if (!tecnicoNombre.trim()) {
+        toast.error('Debe escribir su Nombre y Apellido');
+        return;
+      }
+      if (!distrito) {
+        toast.error('Debe seleccionar su Distrito');
+        return;
+      }
+      if (!central.trim()) {
+        toast.error('Debe escribir su Central');
+        return;
+      }
+      if (!liderNombre) {
+        toast.error('Debe seleccionar su Líder a cargo');
+        return;
+      }
     }
     if (step === 1 && !fotoAdvertencia) {
       toast.error('La fotografía de la advertencia es obligatoria');
@@ -107,7 +134,7 @@ export default function RegistroPage() {
   };
 
   const handleSave = async () => {
-    if (!selectedTecnico || !fotoAdvertencia || !fotoNumeroSerie || !numeroSerie.trim()) {
+    if (!tecnicoNombre.trim() || !distrito || !central.trim() || !liderNombre || !fotoAdvertencia || !fotoNumeroSerie || !numeroSerie.trim()) {
       toast.error('Faltan completar campos obligatorios o fotografías');
       return;
     }
@@ -115,7 +142,7 @@ export default function RegistroPage() {
     setGuardando(true);
 
     try {
-      // 1. Validar en cliente/servidor que existan las fotos obligatorias antes de guardar
+      // 1. Validar en cliente que existan las fotos obligatorias
       const blobAdvertencia = base64ToBlob(fotoAdvertencia);
       const blobNumeroSerie = base64ToBlob(fotoNumeroSerie);
 
@@ -123,15 +150,15 @@ export default function RegistroPage() {
         throw new Error('Las imágenes obligatorias no son válidas o están dañadas.');
       }
 
-      // 2. Insertar Registro
+      // 2. Insertar Registro (Inserción pública sin usuario_id autenticado obligatorio)
       const { data: registro, error: insertError } = await supabase
         .from('registros')
         .insert({
-          tecnico_id: selectedTecnico.id,
-          usuario_id: user.id,
+          tecnico_nombre: tecnicoNombre.trim(),
+          distrito: distrito,
+          central: central.trim(),
+          lider_nombre: liderNombre,
           numero_serie: numeroSerie.trim(),
-          tecnico_nombre: selectedTecnico.nombre,
-          tecnico_legajo: selectedTecnico.legajo,
           estado: 'pendiente',
           observaciones: observaciones.trim() || null
         })
@@ -203,7 +230,10 @@ export default function RegistroPage() {
 
   const resetForm = () => {
     setStep(0);
-    setSelectedTecnico(null);
+    setTecnicoNombre('');
+    setDistrito('');
+    setCentral('');
+    setLiderNombre('');
     setFotoAdvertencia(null);
     setFotoNumeroSerie(null);
     setFotoEscalera(null);
@@ -218,16 +248,19 @@ export default function RegistroPage() {
       {/* Header Fijo */}
       <header className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between z-30">
         <div>
-          <h1 className="font-bold text-slate-900 leading-tight">Nueva Inspección</h1>
-          <p className="text-xs text-slate-500 font-medium">Líder: {profile.nombre}</p>
+          <h1 className="font-bold text-slate-900 leading-tight">Registro de Escaleras</h1>
+          <p className="text-xs text-slate-500 font-medium">Formulario de Colocación de Calcos</p>
         </div>
-        <button
-          onClick={logout}
-          className="p-2 text-slate-400 hover:text-red-500 rounded-xl hover:bg-slate-50 active:scale-95 transition"
-          title="Cerrar sesión"
-        >
-          <LogOut className="h-5 w-5" />
-        </button>
+        {/* Acceso rápido a Admin si el usuario de la sesión es administrador */}
+        {profile?.rol === 'administrador' && (
+          <button
+            onClick={() => router.push('/admin/dashboard')}
+            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-xl flex items-center gap-1.5 text-xs font-bold transition"
+            title="Ir al panel administrador"
+          >
+            <Shield className="h-4 w-4" /> Panel Admin
+          </button>
+        )}
       </header>
 
       {/* Barra de Progreso */}
@@ -251,7 +284,7 @@ export default function RegistroPage() {
             <div>
               <h2 className="text-2xl font-extrabold text-slate-900">¡Registro Guardado!</h2>
               <p className="text-slate-500 text-sm mt-2 px-2">
-                La evidencia fotográfica y el número de serie de la escalera han sido guardados correctamente en el sistema.
+                La evidencia fotográfica del calco y número de serie ha sido registrada correctamente.
               </p>
             </div>
 
@@ -259,17 +292,15 @@ export default function RegistroPage() {
               <div className="bg-slate-50 rounded-xl p-4 text-left text-sm flex flex-col gap-2">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Técnico:</span>
-                  <span className="font-semibold text-slate-950">{selectedTecnico?.nombre}</span>
+                  <span className="font-semibold text-slate-950">{tecnicoNombre}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">N° Serie:</span>
                   <span className="font-mono font-semibold text-indigo-600">{numeroSerie}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Imágenes subidas:</span>
-                  <span className="font-semibold text-slate-950">
-                    {fotoEscalera ? '3 de 3' : '2 de 3'}
-                  </span>
+                  <span className="text-slate-500">Distrito:</span>
+                  <span className="font-semibold text-slate-950">{distrito}</span>
                 </div>
               </div>
 
@@ -284,22 +315,93 @@ export default function RegistroPage() {
         ) : (
           /* Pasos del Formulario */
           <div className="flex flex-col flex-1">
-            {/* Paso 0: Selección de Técnico */}
+            {/* Paso 0: Identificación del Técnico */}
             {step === 0 && (
               <div className="flex flex-col gap-4 animate-in fade-in duration-200">
                 <div>
                   <span className="text-xs font-bold text-indigo-600 uppercase tracking-widest">
                     Paso 1 de 6
                   </span>
-                  <h2 className="text-2xl font-extrabold text-slate-900 mt-1">Seleccionar Técnico</h2>
+                  <h2 className="text-2xl font-extrabold text-slate-900 mt-1">Tus Datos</h2>
                   <p className="text-slate-500 text-sm mt-1">
-                    Seleccione al técnico sobre el cual realizará el registro.
+                    Completa tus datos personales y de asignación.
                   </p>
                 </div>
-                <SearchBar
-                  onSelect={(t) => setSelectedTecnico(t)}
-                  selectedTecnicoId={selectedTecnico?.id}
-                />
+
+                <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
+                  {/* Nombre */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                      <User className="h-3.5 w-3.5 text-indigo-500" /> Nombre y Apellido
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Juan Pérez"
+                      value={tecnicoNombre}
+                      onChange={(e) => setTecnicoNombre(e.target.value)}
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
+                    />
+                  </div>
+
+                  {/* Distrito */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                      <Landmark className="h-3.5 w-3.5 text-indigo-500" /> Distrito
+                    </label>
+                    <select
+                      value={distrito}
+                      onChange={(e) => setDistrito(e.target.value)}
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-medium"
+                    >
+                      <option value="">Seleccione Distrito...</option>
+                      <option value="Norte">Norte</option>
+                      <option value="Sur">Sur</option>
+                      <option value="Este">Este</option>
+                      <option value="Oeste">Oeste</option>
+                      <option value="Centro">Centro</option>
+                    </select>
+                  </div>
+
+                  {/* Central */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                      <Building className="h-3.5 w-3.5 text-indigo-500" /> Central
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Central Devoto"
+                      value={central}
+                      onChange={(e) => setCentral(e.target.value)}
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
+                    />
+                  </div>
+
+                  {/* Líder */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                      <Users className="h-3.5 w-3.5 text-indigo-500" /> Líder a Cargo
+                    </label>
+                    {cargandoLideres ? (
+                      <div className="text-xs text-slate-400 py-2 flex items-center gap-1.5">
+                        <span className="h-3 w-3 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin"></span>
+                        Cargando lista de líderes...
+                      </div>
+                    ) : (
+                      <select
+                        value={liderNombre}
+                        onChange={(e) => setLiderNombre(e.target.value)}
+                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-medium"
+                      >
+                        <option value="">Seleccione su Líder...</option>
+                        {lideres.map((l) => (
+                          <option key={l.id} value={l.nombre}>
+                            {l.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -644,14 +746,14 @@ export default function RegistroPage() {
                       <div>
                         <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Técnico</h4>
                         <p className="text-base font-bold text-slate-950 mt-0.5">
-                          {selectedTecnico?.nombre}
+                          {tecnicoNombre}
                         </p>
-                        <p className="text-xs font-mono text-slate-500">
-                          Legajo: {selectedTecnico?.legajo}
+                        <p className="text-xs text-slate-500">
+                          Central: {central}
                         </p>
                       </div>
                       <div className="bg-indigo-50 px-2.5 py-1 rounded-lg text-xs font-bold text-indigo-700">
-                        {selectedTecnico?.distrito}
+                        Distrito: {distrito}
                       </div>
                     </div>
 
@@ -663,16 +765,16 @@ export default function RegistroPage() {
                     </div>
 
                     <div className="flex justify-between py-1 text-sm border-b border-slate-50">
-                      <span className="text-slate-500">Fecha y Hora:</span>
-                      <span className="font-semibold text-slate-950">
-                        {new Date().toLocaleDateString('es-AR')} - {new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                      <span className="text-slate-500 flex items-center gap-1.5">
+                        <User className="h-4 w-4" /> Líder a cargo:
                       </span>
+                      <span className="font-semibold text-slate-950">{liderNombre}</span>
                     </div>
 
                     <div className="flex justify-between py-1 text-sm border-b border-slate-50">
-                      <span className="text-slate-500">Fotografías:</span>
+                      <span className="text-slate-500">Fecha y Hora:</span>
                       <span className="font-semibold text-slate-950">
-                        {fotoEscalera ? '3' : '2'} (Comprimidas)
+                        {new Date().toLocaleDateString('es-AR')} - {new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
 
@@ -752,7 +854,7 @@ export default function RegistroPage() {
               {guardando ? (
                 <>
                   <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                  Guardando Registro...
+                  Guardando...
                 </>
               ) : (
                 <>
