@@ -345,14 +345,14 @@ export default function RegistroPage() {
                     </div>
 
                     {/* Imagen de muestra */}
-                    <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center">
+                    <div className="relative w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center py-2">
                       <img
                         src="/ejemplo-advertencia.png"
                         alt="Ejemplo colocación calco"
-                        className="object-cover w-full h-full"
+                        className="object-contain max-h-64 w-auto"
                       />
                       <span className="absolute bottom-2 right-2 bg-black/60 px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase tracking-wider">
-                        Muestra de Colocación
+                        Ejemplo de Colocación
                       </span>
                     </div>
 
@@ -437,14 +437,14 @@ export default function RegistroPage() {
                     </div>
 
                     {/* Imagen de muestra */}
-                    <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center">
+                    <div className="relative w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center py-2">
                       <img
                         src="/ejemplo-serie.png"
                         alt="Ejemplo placa número de serie"
-                        className="object-cover w-full h-full"
+                        className="object-contain max-h-64 w-auto"
                       />
                       <span className="absolute bottom-2 right-2 bg-black/60 px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase tracking-wider">
-                        Muestra de Placa de Serie
+                        Ejemplo de Placa de Serie
                       </span>
                     </div>
 
