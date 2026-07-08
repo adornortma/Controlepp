@@ -344,9 +344,21 @@ export default function RegistroPage() {
                       </ul>
                     </div>
 
+                    {/* Imagen de muestra */}
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center">
+                      <img
+                        src="/ejemplo-advertencia.png"
+                        alt="Ejemplo colocación calco"
+                        className="object-cover w-full h-full"
+                      />
+                      <span className="absolute bottom-2 right-2 bg-black/60 px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase tracking-wider">
+                        Muestra de Colocación
+                      </span>
+                    </div>
+
                     <button
                       onClick={() => setShowCamera(true)}
-                      className="w-full mt-2 py-4 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-600/10 active:scale-98 transition flex items-center justify-center gap-2 text-base"
+                      className="w-full mt-2 py-4 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-lg shadow-emerald-600/10 active:scale-98 transition flex items-center justify-center gap-2 text-base"
                     >
                       <CameraIcon className="h-5 w-5" /> Tomar Fotografía
                     </button>
@@ -424,9 +436,21 @@ export default function RegistroPage() {
                       </ul>
                     </div>
 
+                    {/* Imagen de muestra */}
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center">
+                      <img
+                        src="/ejemplo-serie.png"
+                        alt="Ejemplo placa número de serie"
+                        className="object-cover w-full h-full"
+                      />
+                      <span className="absolute bottom-2 right-2 bg-black/60 px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase tracking-wider">
+                        Muestra de Placa de Serie
+                      </span>
+                    </div>
+
                     <button
                       onClick={() => setShowCamera(true)}
-                      className="w-full mt-2 py-4 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-600/10 active:scale-98 transition flex items-center justify-center gap-2 text-base"
+                      className="w-full mt-2 py-4 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-lg shadow-emerald-600/10 active:scale-98 transition flex items-center justify-center gap-2 text-base"
                     >
                       <CameraIcon className="h-5 w-5" /> Tomar Fotografía
                     </button>
