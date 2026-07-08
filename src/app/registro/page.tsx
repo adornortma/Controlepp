@@ -26,6 +26,44 @@ import {
   Shield
 } from 'lucide-react';
 
+const DISTRITOS_CENTRALES: Record<string, string[]> = {
+  'Florencio Varela': [
+    'Berazategui',
+    'Bernal',
+    'Ms Varela',
+    'Quilmes',
+    'Ranelagh',
+    'Varela 1',
+    'Varela 2'
+  ],
+  'Lomas': [
+    'Banfield',
+    'Calzada',
+    'Llavallol',
+    'Lomas',
+    'Ms Lomas',
+    'Solano'
+  ],
+  'Monte Grande': [
+    'Adrogué',
+    'Burzaco',
+    'Ezeiza',
+    'Monte Grande',
+    'Ms Monte Grande'
+  ],
+  'Lanús': [
+    'Gm Lanús',
+    'Gm Lomas',
+    'Gm Monte Grande',
+    'Gm Quilmes Varela',
+    'Lanús',
+    'Monte Chingolo',
+    'Ms Lanús',
+    'Piñeyro',
+    'Sarandí'
+  ]
+};
+
 export default function RegistroPage() {
   const { profile } = useAuth();
   const router = useRouter();
@@ -350,30 +388,42 @@ export default function RegistroPage() {
                     </label>
                     <select
                       value={distrito}
-                      onChange={(e) => setDistrito(e.target.value)}
+                      onChange={(e) => {
+                        setDistrito(e.target.value);
+                        setCentral(''); // Reset central when district changes
+                      }}
                       className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-medium"
                     >
                       <option value="">Seleccione Distrito...</option>
-                      <option value="Norte">Norte</option>
-                      <option value="Sur">Sur</option>
-                      <option value="Este">Este</option>
-                      <option value="Oeste">Oeste</option>
-                      <option value="Centro">Centro</option>
+                      {Object.keys(DISTRITOS_CENTRALES).map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
                   {/* Central */}
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                      <Building className="h-3.5 w-3.5 text-indigo-500" /> Central
+                      <Building className="h-3.5 w-3.5 text-indigo-500" /> Central / Célula
                     </label>
-                    <input
-                      type="text"
-                      placeholder="Ej. Central Devoto"
+                    <select
                       value={central}
                       onChange={(e) => setCentral(e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
-                    />
+                      disabled={!distrito}
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-medium disabled:opacity-50 disabled:bg-slate-50"
+                    >
+                      <option value="">
+                        {distrito ? 'Seleccione Central...' : 'Seleccione primero un Distrito...'}
+                      </option>
+                      {distrito &&
+                        DISTRITOS_CENTRALES[distrito]?.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                    </select>
                   </div>
 
                   {/* Líder */}
