@@ -10,12 +10,14 @@ ALTER TABLE public.registros ADD COLUMN IF NOT EXISTS distrito TEXT;
 
 -- 3. Habilitar inserción anónima (pública) en registros y fotos
 DROP POLICY IF EXISTS "Los líderes pueden insertar registros" ON public.registros;
+DROP POLICY IF EXISTS "Permitir inserción pública de registros" ON public.registros;
 CREATE POLICY "Permitir inserción pública de registros"
     ON public.registros FOR INSERT
     TO anon, authenticated
     WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Los líderes pueden insertar fotos asociadas a sus registros" ON public.fotos;
+DROP POLICY IF EXISTS "Permitir inserción pública de fotos" ON public.fotos;
 CREATE POLICY "Permitir inserción pública de fotos"
     ON public.fotos FOR INSERT
     TO anon, authenticated
@@ -23,11 +25,13 @@ CREATE POLICY "Permitir inserción pública de fotos"
 
 -- 4. Habilitar inserción anónima (pública) en el bucket de storage
 DROP POLICY IF EXISTS "Permitir subida de fotos a usuarios autenticados" ON storage.objects;
+DROP POLICY IF EXISTS "Permitir subida pública de fotos" ON storage.objects;
 CREATE POLICY "Permitir subida pública de fotos"
     ON storage.objects FOR INSERT
     TO anon, authenticated
     WITH CHECK (bucket_id = 'fotos-escaleras');
 
+DROP POLICY IF EXISTS "Permitir lectura pública de fotos a anónimos" ON storage.objects;
 CREATE POLICY "Permitir lectura pública de fotos a anónimos"
     ON storage.objects FOR SELECT
     TO anon, authenticated
