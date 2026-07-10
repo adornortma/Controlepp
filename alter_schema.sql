@@ -36,3 +36,16 @@ CREATE POLICY "Permitir lectura pública de fotos a anónimos"
     ON storage.objects FOR SELECT
     TO anon, authenticated
     USING (bucket_id = 'fotos-escaleras');
+
+-- 5. Habilitar lectura anónima (pública) en registros y fotos
+DROP POLICY IF EXISTS "Permitir lectura pública de registros" ON public.registros;
+CREATE POLICY "Permitir lectura pública de registros"
+    ON public.registros FOR SELECT
+    TO anon, authenticated
+    USING (true);
+
+DROP POLICY IF EXISTS "Permitir lectura pública de fotos" ON public.fotos;
+CREATE POLICY "Permitir lectura pública de fotos"
+    ON public.fotos FOR SELECT
+    TO anon, authenticated
+    USING (true);
