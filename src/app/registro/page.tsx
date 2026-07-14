@@ -282,7 +282,7 @@ export default function RegistroPage() {
       {/* Header Fijo */}
       <header className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between z-30">
         <div>
-          <h1 className="font-bold text-slate-900 leading-tight">Registro de Escaleras</h1>
+          <h1 className="font-bold text-slate-900 leading-tight">Cuidado y señalización de escaleras</h1>
           <p className="text-xs text-slate-500 font-medium">Formulario de Colocación de Calcos</p>
         </div>
         {/* Acceso rápido a Admin si el usuario de la sesión es administrador */}
@@ -458,7 +458,7 @@ export default function RegistroPage() {
                   <span className="text-xs font-bold text-indigo-600 uppercase tracking-widest">
                     Paso 2 de 6
                   </span>
-                  <h2 className="text-2xl font-extrabold text-slate-900 mt-1">Señal de Advertencia</h2>
+                  <h2 className="text-2xl font-extrabold text-slate-900 mt-1">Recomendaciones y ejemplos</h2>
                   <p className="text-slate-500 text-sm mt-1">
                     Evidencia de la etiqueta de advertencia colocada.
                   </p>
@@ -471,7 +471,7 @@ export default function RegistroPage() {
                       <ShieldAlert className="h-5 w-5 shrink-0 text-indigo-600 mt-0.5" />
                       <div className="text-xs leading-relaxed">
                         <strong className="font-semibold block mb-0.5">Ubicación recomendada:</strong>
-                        Debe colocarse visible en la parte frontal del primer tramo de la escalera.
+                        Colocá el calco entre el 5º y el 6º escalón, sobre el parante izquierdo del lado interno de la escalera.
                       </div>
                     </div>
 
@@ -487,7 +487,7 @@ export default function RegistroPage() {
                           <span className="text-emerald-500 font-bold text-base">✓</span> Debe estar correctamente adherida.
                         </li>
                         <li className="flex items-center gap-2">
-                          <span className="text-emerald-500 font-bold text-base">✓</span> No debe tapar el número de serie.
+                          <span className="text-emerald-500 font-bold text-base">✓</span> Debe tener buena iluminación.
                         </li>
                       </ul>
                     </div>
