@@ -136,15 +136,9 @@ export default function RegistroPage() {
       toast.error('La fotografía de la advertencia es obligatoria');
       return;
     }
-    if (step === 2) {
-      if (!fotoNumeroSerie) {
-        toast.error('La fotografía del número de serie es obligatoria');
-        return;
-      }
-      if (!numeroSerie.trim()) {
-        toast.error('Debe ingresar el número de serie de la escalera');
-        return;
-      }
+    if (step === 2 && !fotoNumeroSerie) {
+      toast.error('La fotografía del número de serie es obligatoria');
+      return;
     }
     setStep((prev) => Math.min(prev + 1, totalSteps - 1));
     setShowCamera(false);
@@ -168,7 +162,7 @@ export default function RegistroPage() {
   };
 
   const handleSave = async () => {
-    if (!tecnicoNombre.trim() || !distrito || !central.trim() || !fotoAdvertencia || !fotoNumeroSerie || !numeroSerie.trim()) {
+    if (!tecnicoNombre.trim() || !distrito || !central.trim() || !fotoAdvertencia || !fotoNumeroSerie) {
       toast.error('Faltan completar campos obligatorios o fotografías');
       return;
     }
@@ -192,7 +186,7 @@ export default function RegistroPage() {
           distrito: distrito,
           central: central.trim(),
           lider_nombre: liderNombre,
-          numero_serie: numeroSerie.trim(),
+          numero_serie: numeroSerie.trim() || 'S/N',
           estado: 'pendiente',
           observaciones: observaciones.trim() || null
         })
@@ -627,19 +621,6 @@ export default function RegistroPage() {
                         <Trash2 className="h-5 w-5" />
                       </button>
                     </div>
-
-                    <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm flex flex-col gap-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                        Escriba el Número de Serie Legible:
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Ej. ESC-100293"
-                        value={numeroSerie}
-                        onChange={(e) => setNumeroSerie(e.target.value)}
-                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-mono font-semibold text-lg bg-white text-indigo-700 placeholder:text-slate-300"
-                      />
-                    </div>
                   </div>
                 )}
               </div>
@@ -804,7 +785,7 @@ export default function RegistroPage() {
                       <span className="text-slate-500 flex items-center gap-1.5">
                         <Binary className="h-4 w-4" /> N° Serie:
                       </span>
-                      <span className="font-mono font-bold text-slate-950">{numeroSerie}</span>
+                      <span className="font-mono font-bold text-slate-950">{numeroSerie || 'S/N'}</span>
                     </div>
 
                     <div className="flex justify-between py-1 text-sm border-b border-slate-50">
