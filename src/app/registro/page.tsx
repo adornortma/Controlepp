@@ -640,19 +640,13 @@ export default function RegistroPage() {
                   </div>
                   <h2 className="text-2xl font-extrabold text-slate-900 mt-1">Escalera Completa</h2>
                   <p className="text-slate-500 text-sm mt-1">
-                    Captura general de la escalera como evidencia de entorno.
+                    Captura general de la escalera.
                   </p>
                 </div>
 
                 {!showCamera && !fotoEscalera ? (
                   /* Guía visual */
                   <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
-                    <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex gap-3 text-slate-700">
-                      <Maximize className="h-5 w-5 shrink-0 text-slate-500 mt-0.5" />
-                      <div className="text-xs leading-relaxed">
-                        Esta fotografía aporta evidencia adicional de que el trabajo general en la escalera ha sido terminado.
-                      </div>
-                    </div>
 
                     <div className="flex flex-col gap-2">
                       <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -741,7 +735,7 @@ export default function RegistroPage() {
                   <textarea
                     rows={6}
                     maxLength={500}
-                    placeholder="Detalles sobre adhesión, golpes, etc. (Opcional)"
+                    placeholder="Comentarios opcionales"
                     value={observaciones}
                     onChange={(e) => setObservaciones(e.target.value)}
                     className="w-full p-4 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm bg-white text-slate-900 leading-relaxed"
