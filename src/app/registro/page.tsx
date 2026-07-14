@@ -459,9 +459,6 @@ export default function RegistroPage() {
                     Paso 2 de 6
                   </span>
                   <h2 className="text-2xl font-extrabold text-slate-900 mt-1">Recomendaciones y ejemplos</h2>
-                  <p className="text-slate-500 text-sm mt-1">
-                    Evidencia de la etiqueta de advertencia colocada.
-                  </p>
                 </div>
 
                 {!showCamera && !fotoAdvertencia ? (
@@ -552,7 +549,7 @@ export default function RegistroPage() {
                   </span>
                   <h2 className="text-2xl font-extrabold text-slate-900 mt-1">Número de Serie</h2>
                   <p className="text-slate-500 text-sm mt-1">
-                    Fotografía de la placa del fabricante e ingreso del código.
+                    Fotografía de la placa del fabricante.
                   </p>
                 </div>
 
@@ -563,7 +560,7 @@ export default function RegistroPage() {
                       <Binary className="h-5 w-5 shrink-0 text-indigo-600 mt-0.5" />
                       <div className="text-xs leading-relaxed">
                         <strong className="font-semibold block mb-0.5">Ubicación del N° de Serie:</strong>
-                        Generalmente se encuentra en la etiqueta de características del lateral exterior del larguero.
+                        Generalmente se encuentra en la etiqueta de características del lateral interior del larguero.
                       </div>
                     </div>
 
