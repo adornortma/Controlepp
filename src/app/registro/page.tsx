@@ -140,6 +140,10 @@ export default function RegistroPage() {
       toast.error('La fotografía del número de serie es obligatoria');
       return;
     }
+    if (step === 3 && !fotoEscalera) {
+      toast.error('La fotografía de la escalera completa es obligatoria');
+      return;
+    }
     setStep((prev) => Math.min(prev + 1, totalSteps - 1));
     setShowCamera(false);
   };
@@ -162,7 +166,7 @@ export default function RegistroPage() {
   };
 
   const handleSave = async () => {
-    if (!tecnicoNombre.trim() || !distrito || !central.trim() || !fotoAdvertencia || !fotoNumeroSerie) {
+    if (!tecnicoNombre.trim() || !distrito || !central.trim() || !fotoAdvertencia || !fotoNumeroSerie || !fotoEscalera) {
       toast.error('Faltan completar campos obligatorios o fotografías');
       return;
     }
@@ -173,8 +177,9 @@ export default function RegistroPage() {
       // 1. Validar en cliente que existan las fotos obligatorias
       const blobAdvertencia = base64ToBlob(fotoAdvertencia);
       const blobNumeroSerie = base64ToBlob(fotoNumeroSerie);
+      const blobEscalera = base64ToBlob(fotoEscalera);
 
-      if (blobAdvertencia.size < 1000 || blobNumeroSerie.size < 1000) {
+      if (blobAdvertencia.size < 1000 || blobNumeroSerie.size < 1000 || blobEscalera.size < 1000) {
         throw new Error('Las imágenes obligatorias no son válidas o están dañadas.');
       }
 
@@ -204,7 +209,7 @@ export default function RegistroPage() {
       const fotosSubir = [
         { tipo: 'advertencia', data: fotoAdvertencia },
         { tipo: 'numero_serie', data: fotoNumeroSerie },
-        ...(fotoEscalera ? [{ tipo: 'escalera', data: fotoEscalera }] : [])
+        { tipo: 'escalera', data: fotoEscalera }
       ];
 
       for (const f of fotosSubir) {
@@ -626,16 +631,13 @@ export default function RegistroPage() {
               </div>
             )}
 
-            {/* Paso 3: Escalera Completa (Opcional) */}
+            {/* Paso 3: Escalera Completa */}
             {step === 3 && (
               <div className="flex flex-col gap-4 animate-in fade-in duration-200">
                 <div>
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-bold text-indigo-600 uppercase tracking-widest">
                       Paso 4 de 6
-                    </span>
-                    <span className="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                      Opcional
                     </span>
                   </div>
                   <h2 className="text-2xl font-extrabold text-slate-900 mt-1">Escalera Completa</h2>
@@ -663,15 +665,6 @@ export default function RegistroPage() {
                         className="w-full py-4 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg active:scale-98 transition flex items-center justify-center gap-2 text-base"
                       >
                         <CameraIcon className="h-5 w-5" /> Tomar Fotografía
-                      </button>
-                      <button
-                        onClick={() => {
-                          setFotoEscalera(null);
-                          avanzar();
-                        }}
-                        className="w-full py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold active:scale-98 transition"
-                      >
-                        Omitir Paso
                       </button>
                     </div>
                   </div>
@@ -822,19 +815,12 @@ export default function RegistroPage() {
                         Serie
                       </span>
                     </div>
-                    {fotoEscalera ? (
-                      <div className="aspect-square bg-slate-100 rounded-lg overflow-hidden relative border border-slate-200">
-                        <img src={fotoEscalera || undefined} alt="Escalera" className="w-full h-full object-cover" />
-                        <span className="absolute bottom-1 left-1 bg-black/60 px-1 py-0.5 rounded text-[8px] font-bold text-white uppercase tracking-wider">
-                          Esc.
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="aspect-square bg-slate-50 rounded-lg border border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400">
-                        <span className="text-[9px] uppercase tracking-wider font-semibold">Sin</span>
-                        <span className="text-[9px] uppercase tracking-wider font-semibold">Foto 3</span>
-                      </div>
-                    )}
+                    <div className="aspect-square bg-slate-100 rounded-lg overflow-hidden relative border border-slate-200">
+                      <img src={fotoEscalera!} alt="Escalera" className="w-full h-full object-cover" />
+                      <span className="absolute bottom-1 left-1 bg-black/60 px-1 py-0.5 rounded text-[8px] font-bold text-white uppercase tracking-wider">
+                        Esc.
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
