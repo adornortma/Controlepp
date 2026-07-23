@@ -49,3 +49,23 @@ CREATE POLICY "Permitir lectura pública de fotos"
     ON public.fotos FOR SELECT
     TO anon, authenticated
     USING (true);
+
+-- 6. Modificar tabla public.tecnicos para agregar celula y lider_id
+ALTER TABLE public.tecnicos ADD COLUMN IF NOT EXISTS celula TEXT;
+ALTER TABLE public.tecnicos ADD COLUMN IF NOT EXISTS lider_id UUID REFERENCES public.usuarios(id);
+
+-- 7. Habilitar lectura pública de tecnicos y usuarios para anon (asistente sin login)
+DROP POLICY IF EXISTS "Los usuarios autenticados pueden ver los tecnicos" ON public.tecnicos;
+DROP POLICY IF EXISTS "Permitir lectura pública de tecnicos" ON public.tecnicos;
+CREATE POLICY "Permitir lectura pública de tecnicos"
+    ON public.tecnicos FOR SELECT
+    TO anon, authenticated
+    USING (activo = true);
+
+DROP POLICY IF EXISTS "Los usuarios autenticados pueden ver la lista de usuarios" ON public.usuarios;
+DROP POLICY IF EXISTS "Permitir lectura pública de usuarios" ON public.usuarios;
+CREATE POLICY "Permitir lectura pública de usuarios"
+    ON public.usuarios FOR SELECT
+    TO anon, authenticated
+    USING (activo = true);
+

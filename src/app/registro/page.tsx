@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
-import { supabase, Usuario } from '@/lib/supabase';
+import { supabase, Usuario, Tecnico } from '@/lib/supabase';
 import { Camera } from '@/components/camera';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
@@ -23,60 +23,34 @@ import {
   Building,
   Users,
   Camera as CameraIcon,
-  Shield
+  Shield,
+  MapPin,
+  Briefcase
 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
-const DISTRITOS_CENTRALES: Record<string, string[]> = {
-  'Florencio Varela': [
-    'Berazategui',
-    'Bernal',
-    'Ms Varela',
-    'Quilmes',
-    'Ranelagh',
-    'Varela 1',
-    'Varela 2'
-  ],
-  'Lomas': [
-    'Banfield',
-    'Calzada',
-    'Llavallol',
-    'Lomas',
-    'Ms Lomas',
-    'Solano'
-  ],
-  'Monte Grande': [
-    'Adrogué',
-    'Burzaco',
-    'Ezeiza',
-    'Monte Grande',
-    'Ms Monte Grande'
-  ],
-  'Lanús': [
-    'Gm Lanús',
-    'Gm Lomas',
-    'Gm Monte Grande',
-    'Gm Quilmes Varela',
-    'Lanús',
-    'Monte Chingolo',
-    'Ms Lanús',
-    'Piñeyro',
-    'Sarandí'
-  ]
-};
+interface RegistroPageProps {
+  defaultDistrito?: string;
+}
 
-export default function RegistroPage() {
+export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: RegistroPageProps) {
   const { profile } = useAuth();
   const router = useRouter();
 
-  // Estados del Formulario del Técnico (Paso 0)
-  const [tecnicoNombre, setTecnicoNombre] = useState('');
-  const [distrito, setDistrito] = useState('');
-  const [central, setCentral] = useState('');
-  const [liderNombre, setLiderNombre] = useState('');
+  // Estados de datos obtenidos de Supabase
+  const [tecnicos, setTecnicos] = useState<Tecnico[]>([]);
+  const [cargandoTecnicos, setCargandoTecnicos] = useState(true);
 
-  // Lista de líderes obtenidos de la base de datos
-  const [lideres, setLideres] = useState<Usuario[]>([]);
-  const [cargandoLideres, setCargandoLideres] = useState(true);
+  // Estados de selección del técnico (Paso 0)
+  const [celulaSeleccionada, setCelulaSeleccionada] = useState('');
+  const [tecnicoSeleccionadoId, setTecnicoSeleccionadoId] = useState('');
+  const [tecnicoSeleccionadoObj, setTecnicoSeleccionadoObj] = useState<Tecnico | null>(null);
 
   // Estados del Asistente
   const [step, setStep] = useState(0); // 0 a 5
@@ -91,27 +65,55 @@ export default function RegistroPage() {
   // Carga de cámara activa en cada paso
   const [showCamera, setShowCamera] = useState(false);
 
-  // Cargar líderes activos de Supabase
+  // Cargar técnicos activos del distrito correspondiente de Supabase
   useEffect(() => {
-    const fetchLideres = async () => {
+    const fetchTecnicos = async () => {
+      setCargandoTecnicos(true);
+      setCelulaSeleccionada('');
+      setTecnicoSeleccionadoId('');
+      setTecnicoSeleccionadoObj(null);
       try {
         const { data, error } = await supabase
-          .from('usuarios')
-          .select('*')
+          .from('tecnicos')
+          .select(`
+            *,
+            usuarios (
+              id,
+              nombre
+            )
+          `)
           .eq('activo', true)
-          .order('nombre', { ascending: true });
+          .eq('distrito', defaultDistrito);
 
         if (error) throw error;
-        setLideres(data || []);
+        setTecnicos(data || []);
       } catch (err) {
-        console.error('Error fetching leaders:', err);
+        console.error('Error fetching technicians:', err);
+        toast.error('Error al cargar la lista de técnicos');
       } finally {
-        setCargandoLideres(false);
+        setCargandoTecnicos(false);
       }
     };
 
-    fetchLideres();
-  }, []);
+    fetchTecnicos();
+  }, [defaultDistrito]);
+
+  // Manejar el cambio de técnico seleccionado
+  const handleTecnicoChange = (id: string) => {
+    setTecnicoSeleccionadoId(id);
+    const tech = tecnicos.find((t) => t.id === id) || null;
+    setTecnicoSeleccionadoObj(tech);
+  };
+
+  // Obtener células únicas del distrito de forma ordenada
+  const celulas = Array.from(
+    new Set(tecnicos.map((t) => t.celula).filter(Boolean))
+  ) as string[];
+  celulas.sort();
+
+  // Filtrar técnicos por la célula seleccionada
+  const tecnicosFiltrados = tecnicos.filter((t) => t.celula === celulaSeleccionada);
+  tecnicosFiltrados.sort((a, b) => a.nombre.localeCompare(b.nombre));
 
   // Título e instrucciones de cada paso
   const totalSteps = 6; // Formulario Técnico, Advertencia, Serie, Escalera, Obs, Confirmación
@@ -119,16 +121,8 @@ export default function RegistroPage() {
 
   const avanzar = () => {
     if (step === 0) {
-      if (!tecnicoNombre.trim()) {
-        toast.error('Debe escribir su Nombre y Apellido');
-        return;
-      }
-      if (!distrito) {
-        toast.error('Debe seleccionar su Distrito');
-        return;
-      }
-      if (!central.trim()) {
-        toast.error('Debe escribir su Central');
+      if (!tecnicoSeleccionadoObj) {
+        toast.error('Debe seleccionar su Célula y su Nombre');
         return;
       }
     }
@@ -166,7 +160,12 @@ export default function RegistroPage() {
   };
 
   const handleSave = async () => {
-    if (!tecnicoNombre.trim() || !distrito || !central.trim() || !fotoAdvertencia || !fotoNumeroSerie || !fotoEscalera) {
+    if (
+      !tecnicoSeleccionadoObj ||
+      !fotoAdvertencia ||
+      !fotoNumeroSerie ||
+      !fotoEscalera
+    ) {
       toast.error('Faltan completar campos obligatorios o fotografías');
       return;
     }
@@ -183,13 +182,19 @@ export default function RegistroPage() {
         throw new Error('Las imágenes obligatorias no son válidas o están dañadas.');
       }
 
-      // 2. Insertar Registro (Inserción pública sin usuario_id autenticado obligatorio)
+      const liderNombre = tecnicoSeleccionadoObj.usuarios?.nombre || null;
+      const liderId = tecnicoSeleccionadoObj.lider_id || null;
+
+      // 2. Insertar Registro (Asociando los IDs relacionales obtenidos)
       const { data: registro, error: insertError } = await supabase
         .from('registros')
         .insert({
-          tecnico_nombre: tecnicoNombre.trim(),
-          distrito: distrito,
-          central: central.trim(),
+          tecnico_id: tecnicoSeleccionadoObj.id,
+          usuario_id: liderId, // El ID de su supervisor
+          tecnico_nombre: tecnicoSeleccionadoObj.nombre,
+          tecnico_legajo: tecnicoSeleccionadoObj.legajo,
+          distrito: defaultDistrito,
+          central: celulaSeleccionada, // Célula
           lider_nombre: liderNombre,
           numero_serie: numeroSerie.trim() || 'S/N',
           estado: 'pendiente',
@@ -263,10 +268,9 @@ export default function RegistroPage() {
 
   const resetForm = () => {
     setStep(0);
-    setTecnicoNombre('');
-    setDistrito('');
-    setCentral('');
-    setLiderNombre('');
+    setCelulaSeleccionada('');
+    setTecnicoSeleccionadoId('');
+    setTecnicoSeleccionadoObj(null);
     setFotoAdvertencia(null);
     setFotoNumeroSerie(null);
     setFotoEscalera(null);
@@ -325,15 +329,15 @@ export default function RegistroPage() {
               <div className="bg-slate-50 rounded-xl p-4 text-left text-sm flex flex-col gap-2">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Técnico:</span>
-                  <span className="font-semibold text-slate-950">{tecnicoNombre}</span>
+                  <span className="font-semibold text-slate-950">{tecnicoSeleccionadoObj?.nombre}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">N° Serie:</span>
-                  <span className="font-mono font-semibold text-indigo-600">{numeroSerie}</span>
+                  <span className="text-slate-500">Célula:</span>
+                  <span className="font-semibold text-slate-950">{celulaSeleccionada}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Distrito:</span>
-                  <span className="font-semibold text-slate-950">{distrito}</span>
+                  <span className="font-semibold text-slate-950">{defaultDistrito}</span>
                 </div>
               </div>
 
@@ -357,100 +361,112 @@ export default function RegistroPage() {
                   </span>
                   <h2 className="text-2xl font-extrabold text-slate-900 mt-1">Tus Datos</h2>
                   <p className="text-slate-500 text-sm mt-1">
-                    Completa tus datos personales y de asignación.
+                    Selecciona tu sector y tu nombre para continuar.
                   </p>
                 </div>
 
-                <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
-                  {/* Nombre */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                      <User className="h-3.5 w-3.5 text-indigo-500" /> Nombre y Apellido
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Ej. Juan Pérez"
-                      value={tecnicoNombre}
-                      onChange={(e) => setTecnicoNombre(e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
-                    />
-                  </div>
-
-                  {/* Distrito */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                      <Landmark className="h-3.5 w-3.5 text-indigo-500" /> Distrito
-                    </label>
-                    <select
-                      value={distrito}
-                      onChange={(e) => {
-                        setDistrito(e.target.value);
-                        setCentral(''); // Reset central when district changes
-                      }}
-                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-medium"
-                    >
-                      <option value="">Seleccione Distrito...</option>
-                      {Object.keys(DISTRITOS_CENTRALES).map((d) => (
-                        <option key={d} value={d}>
-                          {d}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Central */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                      <Building className="h-3.5 w-3.5 text-indigo-500" /> Central / Célula
-                    </label>
-                    <select
-                      value={central}
-                      onChange={(e) => setCentral(e.target.value)}
-                      disabled={!distrito}
-                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-medium disabled:opacity-50 disabled:bg-slate-50"
-                    >
-                      <option value="">
-                        {distrito ? 'Seleccione Central...' : 'Seleccione primero un Distrito...'}
-                      </option>
-                      {distrito &&
-                        DISTRITOS_CENTRALES[distrito]?.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-
-                  {/* Líder */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                      <Users className="h-3.5 w-3.5 text-indigo-500" /> Líder a Cargo (Opcional)
-                    </label>
-                    {cargandoLideres ? (
-                      <div className="text-xs text-slate-400 py-2 flex items-center gap-1.5">
-                        <span className="h-3 w-3 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin"></span>
-                        Cargando lista de líderes...
+                <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex flex-col gap-5">
+                  {cargandoTecnicos ? (
+                    <div className="py-8 flex flex-col items-center justify-center gap-3 text-slate-400">
+                      <div className="h-8 w-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                      <span className="text-sm font-medium">Cargando datos de distrito...</span>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Célula */}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <Building className="h-4 w-4 text-indigo-500" /> ¿A qué célula pertenecés?
+                        </label>
+                        <Select
+                          value={celulaSeleccionada}
+                          onValueChange={(val) => {
+                            setCelulaSeleccionada(val);
+                            setTecnicoSeleccionadoId('');
+                            setTecnicoSeleccionadoObj(null);
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Seleccionar célula" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {celulas.map((c) => (
+                              <SelectItem key={c} value={c}>
+                                {c}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
-                    ) : (
-                      <select
-                        value={liderNombre}
-                        onChange={(e) => setLiderNombre(e.target.value)}
-                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm font-medium"
-                      >
-                        <option value="">Seleccione su Líder (Opcional)...</option>
-                        {lideres.map((l) => (
-                          <option key={l.id} value={l.nombre}>
-                            {l.nombre}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
+
+                      {/* Técnico */}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                          <User className="h-4 w-4 text-indigo-500" /> Seleccioná tu nombre
+                        </label>
+                        <Select
+                          value={tecnicoSeleccionadoId}
+                          onValueChange={handleTecnicoChange}
+                          disabled={!celulaSeleccionada}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={celulaSeleccionada ? "Seleccionar técnico" : "Selecciona primero una célula"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {tecnicosFiltrados.map((t) => (
+                              <SelectItem key={t.id} value={t.id}>
+                                {t.nombre}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Tarjeta de Confirmación */}
+                      {tecnicoSeleccionadoObj && (
+                        <div className="mt-2 p-5 bg-gradient-to-br from-indigo-50/50 to-indigo-100/10 border border-indigo-100 rounded-2xl flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 shadow-inner">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl">
+                              👷
+                            </div>
+                            <div>
+                              <h3 className="font-extrabold text-slate-900 text-base">{tecnicoSeleccionadoObj.nombre}</h3>
+                              <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">Técnico Asignado</p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-2 border-t border-indigo-100/60 text-xs">
+                            <div>
+                              <span className="text-slate-400 block font-semibold flex items-center gap-1">📍 Distrito</span>
+                              <span className="font-bold text-slate-800 text-sm mt-0.5 block">{defaultDistrito}</span>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 block font-semibold flex items-center gap-1">🏢 Célula</span>
+                              <span className="font-bold text-slate-800 text-sm mt-0.5 block">{celulaSeleccionada}</span>
+                            </div>
+                            <div className="col-span-2">
+                              <span className="text-slate-400 block font-semibold flex items-center gap-1">👨‍💼 Líder</span>
+                              <span className="font-bold text-slate-800 text-sm mt-0.5 block">
+                                {tecnicoSeleccionadoObj.usuarios?.nombre || 'Sin líder asignado'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={avanzar}
+                            className="w-full mt-2 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-600/10 active:scale-[0.98] transition flex items-center justify-center gap-1.5 text-sm"
+                          >
+                            Continuar <ChevronRight className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Paso 1: Advertencia Colocada */}
+            {/* Paso 1: Recomendaciones y Ejemplos */}
             {step === 1 && (
               <div className="flex flex-col gap-4 animate-in fade-in duration-200">
                 <div>
@@ -757,14 +773,14 @@ export default function RegistroPage() {
                       <div>
                         <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Técnico</h4>
                         <p className="text-base font-bold text-slate-950 mt-0.5">
-                          {tecnicoNombre}
+                          {tecnicoSeleccionadoObj?.nombre}
                         </p>
                         <p className="text-xs text-slate-500">
-                          Central: {central}
+                          Célula: {celulaSeleccionada}
                         </p>
                       </div>
                       <div className="bg-indigo-50 px-2.5 py-1 rounded-lg text-xs font-bold text-indigo-700">
-                        Distrito: {distrito}
+                        Distrito: {defaultDistrito}
                       </div>
                     </div>
 
@@ -779,7 +795,9 @@ export default function RegistroPage() {
                       <span className="text-slate-500 flex items-center gap-1.5">
                         <User className="h-4 w-4" /> Líder a cargo:
                       </span>
-                      <span className="font-semibold text-slate-950">{liderNombre}</span>
+                      <span className="font-semibold text-slate-950">
+                        {tecnicoSeleccionadoObj?.usuarios?.nombre || 'Sin líder asignado'}
+                      </span>
                     </div>
 
                     <div className="flex justify-between py-1 text-sm border-b border-slate-50">
@@ -829,7 +847,7 @@ export default function RegistroPage() {
         )}
       </main>
 
-      {/* Botones Fijos de Control (Solo si no está en éxito) */}
+      {/* Botones Fijos de Control (Solo si no está en éxito ni en el paso 0 con técnico confirmado) */}
       {!guardadoExitoso && (
         <div className="fixed bottom-0 inset-x-0 bg-white border-t border-slate-100 p-4 max-w-md mx-auto w-full flex gap-3 z-30 shadow-lg">
           {step > 0 && (
@@ -842,14 +860,14 @@ export default function RegistroPage() {
             </button>
           )}
 
-          {step < totalSteps - 1 ? (
+          {step > 0 && step < totalSteps - 1 ? (
             <button
               onClick={avanzar}
               className="flex-1 py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white rounded-xl font-bold shadow-lg shadow-indigo-600/10 flex items-center justify-center gap-1.5 transition"
             >
               Siguiente <ChevronRight className="h-5 w-5" />
             </button>
-          ) : (
+          ) : step === totalSteps - 1 ? (
             <button
               onClick={handleSave}
               disabled={guardando}
@@ -866,7 +884,7 @@ export default function RegistroPage() {
                 </>
               )}
             </button>
-          )}
+          ) : null /* En el paso 0, el botón "Continuar" está dentro de la tarjeta de confirmación */}
         </div>
       )}
     </div>

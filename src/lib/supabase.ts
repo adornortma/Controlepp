@@ -22,8 +22,11 @@ export interface Tecnico {
   legajo: string;
   nombre: string;
   distrito: string | null;
+  celula: string | null;
+  lider_id: string | null;
   activo: boolean;
   created_at: string;
+  usuarios?: Usuario;
 }
 
 export interface Registro {
