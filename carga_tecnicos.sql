@@ -1,0 +1,271 @@
+-- 1. Insertar todos los técnicos en la tabla 'tecnicos'
+-- Nota: Limpiamos los nombres de distritos y células para que coincidan con la interfaz
+INSERT INTO public.tecnicos (legajo, nombre, distrito, celula, activo) VALUES
+('151437', 'JARA, GUSTAVO', 'Florencio Varela', 'Berazategui', true),
+('173821', 'GOROSITO, MARIO ARIEL', 'Florencio Varela', 'Berazategui', true),
+('173831', 'DIAZ, JUAN', 'Florencio Varela', 'Berazategui', true),
+('176355', 'SOLIS, GUSTAVO', 'Florencio Varela', 'Berazategui', true),
+('500162', 'BOFFELLI, LEONARDO DAMIAN', 'Florencio Varela', 'Berazategui', true),
+('146942', 'TENDERA, ALEJANDRO', 'Florencio Varela', 'Berazategui', true),
+('503519', 'SIMONE, FAUSTO FABIAN', 'Florencio Varela', 'Berazategui', true),
+('144252', 'MAIDANA, JORGE', 'Florencio Varela', 'Bernal', true),
+('146880', 'SUCUNZA, JUAN GUILLERMO', 'Florencio Varela', 'Bernal', true),
+('148247', 'ROMERO, SEBASTIAN EDUARDO', 'Florencio Varela', 'Bernal', true),
+('148360', 'RODRIGUEZ, SAUL DAVID', 'Florencio Varela', 'Bernal', true),
+('151074', 'GUICHARD, ARIEL ALBERTO', 'Florencio Varela', 'Bernal', true),
+('151258', 'MORALES, LUIS', 'Florencio Varela', 'Bernal', true),
+('151766', 'GUICHARD, CRISTIAN EZEQUIEL', 'Florencio Varela', 'Bernal', true),
+('503442', 'GONZALEZ, LAUTARO JOEL', 'Florencio Varela', 'Ms Varela', true),
+('503493', 'ROMERO, MAURO ADRIAN', 'Florencio Varela', 'Ms Varela', true),
+('148636', 'CORTES, HERNAN EUGENIO', 'Florencio Varela', 'Ms Varela', true),
+('142238', 'DIAZ, GUSTAVO ADRIAN', 'Florencio Varela', 'Ms Varela', true),
+('144922', 'MUÑOZ, DIEGO ANGEL', 'Florencio Varela', 'Ms Varela', true),
+('145571', 'PERNARGIG, JULIO', 'Florencio Varela', 'Ms Varela', true),
+('148356', 'CASTELLO, BRAIAN EZEQUIEL', 'Florencio Varela', 'Ms Varela', true),
+('149377', 'FERNANDEZ CORIMAYO, JUAN M', 'Florencio Varela', 'Ms Varela', true),
+('176565', 'ARAUJO, NAHUEL', 'Florencio Varela', 'Ms Varela', true),
+('142193', 'DI MEGLIO, OMAR', 'Florencio Varela', 'Quilmes', true),
+('143673', 'IZQUIERDO, FERNANDO', 'Florencio Varela', 'Quilmes', true),
+('144695', 'MIÑO, CARLOS RUBEN', 'Florencio Varela', 'Quilmes', true),
+('148208', 'LINKIEWICZ, DARIO HERNAN', 'Florencio Varela', 'Quilmes', true),
+('151416', 'MENESES, SERGIO ESTEBAN', 'Florencio Varela', 'Quilmes', true),
+('172154', 'CASTRO, LUIS', 'Florencio Varela', 'Quilmes', true),
+('171623', 'PEREZ, SERGIO', 'Florencio Varela', 'Quilmes', true),
+('145477', 'PERASSO, ROBERTO ALEJANDRO', 'Florencio Varela', 'Quilmes', true),
+('181375', 'DANIELE, MATIAS EZEQUIEL', 'Florencio Varela', 'Quilmes', true),
+('141561', 'CENCI, GUSTAVO', 'Florencio Varela', 'Ranelagh', true),
+('148244', 'SEGOVIA, JAVIER ANDRES', 'Florencio Varela', 'Ranelagh', true),
+('151255', 'GARCIA, PABLO DIEGO', 'Florencio Varela', 'Ranelagh', true),
+('151494', 'GARIGALI, RICARDO ANDRES', 'Florencio Varela', 'Ranelagh', true),
+('171608', 'SUAREZ, JOSE RAMON', 'Florencio Varela', 'Ranelagh', true),
+('500630', 'RAMIREZ, CARLOS ALBERTO', 'Florencio Varela', 'Ranelagh', true),
+('500205', 'GARDIAZABAL, JILMAR', 'Florencio Varela', 'Ranelagh', true),
+('502365', 'STELLA, SERGIO LEONEL', 'Florencio Varela', 'Ranelagh', true),
+('149857', 'BOSCHETTI, CAMILO JAVIER', 'Florencio Varela', 'Ranelagh', true),
+('147251', 'VERA, LUIS ALBERTO', 'Florencio Varela', 'Varela 1', true),
+('148220', 'MORALES, ANDRES DARIO', 'Florencio Varela', 'Varela 1', true),
+('150525', 'GARCIA, MARCOS ANDRES', 'Florencio Varela', 'Varela 1', true),
+('151505', 'BLANCO, GERMAN', 'Florencio Varela', 'Varela 1', true),
+('171616', 'SILVA, FERNANDO', 'Florencio Varela', 'Varela 1', true),
+('171624', 'SERRANO, OMAR', 'Florencio Varela', 'Varela 1', true),
+('146100', 'RODRIGUEZ, HECTOR HORACIO', 'Florencio Varela', 'Varela 1', true),
+('151749', 'DORIGO, NICOLAS DAMIAN', 'Florencio Varela', 'Varela 1', true),
+('142913', 'GALVAN, SILVIO JAVIER', 'Florencio Varela', 'Varela 2', true),
+('144243', 'MAGLIARELLI, JOSE ALBERTO', 'Florencio Varela', 'Varela 2', true),
+('147394', 'VITTONI, LUIS ALBERTO', 'Florencio Varela', 'Varela 2', true),
+('148183', 'ALGUE, JONATHAN', 'Florencio Varela', 'Varela 2', true),
+('148322', 'VERGARA, EZEQUIEL MATIAS', 'Florencio Varela', 'Varela 2', true),
+('500211', 'FRANCO, LUIS ADRIAN', 'Florencio Varela', 'Varela 2', true),
+('500243', 'ASULLARE, JUAN', 'Florencio Varela', 'Varela 2', true),
+('138862', 'SERRANO, FERNANDO ARIEL', 'Florencio Varela', 'Varela 2', true),
+('148211', 'ORDOÑEZ, SEBASTIAN', 'Lanús', 'Lanús', true),
+('148261', 'COLLICH COSTRE, CRISTIAN ARIEL', 'Lanús', 'Lanús', true),
+('151269', 'DANERI, JUAN MANUEL', 'Lanús', 'Lanús', true),
+('171607', 'HERBAS, ANDRES ALEJANDRO', 'Lanús', 'Lanús', true),
+('147920', 'ARROUGE, JUAN FRANCISCO', 'Lanús', 'Lanús', true),
+('149045', 'MONTOYA, ARIEL MIGUEL', 'Lanús', 'Lanús', true),
+('150011', 'SETTEMBRI, DIEGO DANIEL', 'Lanús', 'Lanús', true),
+('151214', 'CUENCA, LEONARDO XAVIER', 'Lanús', 'Lanús', true),
+('151403', 'BACIGALUPO, NICOLAS OSCAR', 'Lanús', 'Lanús', true),
+('503014', 'MARTINEZ, LEONARDO MIGUEL', 'Lanús', 'Lanús', true),
+('140783', 'BENITEZ, GUILLERMO', 'Lanús', 'Monte Chingolo', true),
+('141793', 'CORBALAN, ADRIAN DAVID', 'Lanús', 'Monte Chingolo', true),
+('144102', 'LOPEZ, OSVALDO HECTOR', 'Lanús', 'Monte Chingolo', true),
+('146063', 'ROCHA, MARCELO HORACIO', 'Lanús', 'Monte Chingolo', true),
+('146144', 'RODRIGUEZ, RAMON', 'Lanús', 'Monte Chingolo', true),
+('151422', 'MALAKIAN, JUAN ALBERTO', 'Lanús', 'Monte Chingolo', true),
+('172528', 'CONTRERA, FERNANDO', 'Lanús', 'Monte Chingolo', true),
+('177592', 'PONCE, FERNANDO', 'Lanús', 'Monte Chingolo', true),
+('179048', 'JURI, ROGELIO', 'Lanús', 'Monte Chingolo', true),
+('501016', 'ROJAS, ARIEL ALEJANDRO', 'Lanús', 'Monte Chingolo', true),
+('143315', 'GONZALEZ, JUAN JOSE', 'Lanús', 'Ms Lanús', true),
+('503475', 'FIGUEROA, ALAN  NAHUEL', 'Lanús', 'Ms Lanús', true),
+('148186', 'BARBIERI, OMAR DANIEL', 'Lanús', 'Ms Lanús', true),
+('148336', 'TORRES, FACUNDO NAHUEL', 'Lanús', 'Ms Lanús', true),
+('151513', 'RAMENZONI, GUSTAVO LUIS', 'Lanús', 'Ms Lanús', true),
+('144400', 'MARINO, DAMIAN ALBERTO', 'Lanús', 'Ms Lanús', true),
+('145348', 'PARED, JUAN MANUEL', 'Lanús', 'Ms Lanús', true),
+('161853', 'JAIME, MARCELO RAUL', 'Lanús', 'Ms Lanús', true),
+('173870', 'RIOS RADO, EMILIO', 'Lanús', 'Ms Lanús', true),
+('147190', 'VAZQUEZ, DANIEL ALEJANDRO', 'Lanús', 'Piñeyro', true),
+('148328', 'MORALES, MARIANO ALFREDO', 'Lanús', 'Piñeyro', true),
+('503557', 'SALORIO, MARTIN DANIEL', 'Lanús', 'Piñeyro', true),
+('173933', 'RUIZ, JONATHAN', 'Lanús', 'Piñeyro', true),
+('173973', 'RAMAGNANO, DIEGO MARTIN', 'Lanús', 'Piñeyro', true),
+('151599', 'ORTIGOZA, EMMANUEL JAVIER', 'Lanús', 'Piñeyro', true),
+('503310', 'MASTROPASQUA, PABLO LEONEL', 'Lanús', 'Piñeyro', true),
+('141629', 'CHAZARRETA, CARLOS GUSTAVO', 'Lanús', 'Piñeyro', true),
+('156299', 'RUIZ, LUIS EMILIO', 'Lanús', 'Piñeyro', true),
+('177455', 'ORO, ARIEL', 'Lanús', 'Piñeyro', true),
+('500126', 'OJEDA, DANIEL', 'Lanús', 'Piñeyro', true),
+('503331', 'CARBONE, GABRIEL JESÚS', 'Lanús', 'Piñeyro', true),
+('10000863', 'ZARATE, SEBASTIAN EZEQUIEL', 'Lanús', 'Piñeyro', true),
+('144030', 'LOCCIZANO, GABRIEL', 'Lanús', 'Sarandí', true),
+('148219', 'SCORZIELLO, MONICA LORENA', 'Lanús', 'Sarandí', true),
+('151380', 'OLIVA, JORGE AUGUSTO', 'Lanús', 'Sarandí', true),
+('151519', 'PEREYRA, LEON PABLO', 'Lanús', 'Sarandí', true),
+('177599', 'FALCON, AGUSTIN ALEJANDRO', 'Lanús', 'Sarandí', true),
+('10001530', 'TORRES, CHRISTIAN NICOLAS', 'Lanús', 'Sarandí', true),
+('148206', 'ARGÜELLES, VICTOR MANUEL', 'Lanús', 'Sarandí', true),
+('148228', 'TAIBO, GABRIEL ALEJANDRO', 'Lanús', 'Sarandí', true),
+('151619', 'ROJAS, MAXIMILIANO', 'Lanús', 'Sarandí', true),
+('159523', 'DENNINOTI, LUCIANO', 'Lanús', 'Sarandí', true),
+('143299', 'GONZALEZ, HECTOR', 'Lomas', 'Banfield', true),
+('143714', 'JORGE, MARCELO ADRIAN', 'Lomas', 'Banfield', true),
+('146036', 'RIVERO, OSCAR', 'Lomas', 'Banfield', true),
+('146493', 'SANCHEZ PINTOS, RAFAEL VALERIO', 'Lomas', 'Banfield', true),
+('150221', 'ROMERO, HERNAN RAUL', 'Lomas', 'Banfield', true),
+('150444', 'GONZALEZ, ALDO ANDRES', 'Lomas', 'Banfield', true),
+('503329', 'SCORZIELLO, FERNANDO GABRIEL', 'Lomas', 'Banfield', true),
+('159473', 'OJEDA, JORGE', 'Lomas', 'Banfield', true),
+('503492', 'FARIÑAS, GASTON ALEJANDRO', 'Lomas', 'Banfield', true),
+('147292', 'VIDELA, CESAR', 'Lomas', 'Calzada', true),
+('148348', 'BARONE, JUAN MANUEL', 'Lomas', 'Calzada', true),
+('166345', 'LAMBERTINI, OMAR DARIO', 'Lomas', 'Calzada', true),
+('176116', 'CARABAJAL, DANIEL', 'Lomas', 'Calzada', true),
+('148252', 'RUEDA, MATIAS EZEQUIEL', 'Lomas', 'Calzada', true),
+('148127', 'ROBLEDO, RICARDO ANDRES', 'Lomas', 'Calzada', true),
+('151259', 'RIOS, MARCELO GERMAN', 'Lomas', 'Calzada', true),
+('10001037', 'JURJO, MATIAS', 'Lomas', 'Calzada', true),
+('151671', 'ECHECURY, FEDERICO OSCAR', 'Lomas', 'Calzada', true),
+('148369', 'GARCIA, MARIANO MARTIN', 'Lomas', 'Calzada', true),
+('142316', 'DOMINGUEZ, MARCELO JAVIER', 'Lomas', 'Llavallol', true),
+('145320', 'PANETTA, ARIEL ROBERTO', 'Lomas', 'Llavallol', true),
+('148418', 'CABRERA, GUSTAVO', 'Lomas', 'Llavallol', true),
+('151734', 'GATTI, AUGUSTO SALVADOR', 'Lomas', 'Llavallol', true),
+('160780', 'SOSA, LUIS ALBERTO', 'Lomas', 'Llavallol', true),
+('176574', 'OSINAGA, CRISTIAN', 'Lomas', 'Llavallol', true),
+('500167', 'FERNANDEZ, RICARDO ANIBAL', 'Lomas', 'Llavallol', true),
+('138763', 'RAMIREZ, SERGIO DANIEL', 'Lomas', 'Llavallol', true),
+('500178', 'SETRANCOLA, SERGIO', 'Lomas', 'Llavallol', true),
+('170033', 'RUIZ, DAVID', 'Lomas', 'Llavallol', true),
+('150942', 'TOLOZA, RUBEN ORLANDO', 'Lomas', 'Lomas', true),
+('501013', 'TELLO, VICTOR LEONARDO', 'Lomas', 'Lomas', true),
+('173915', 'LANDI, DAMIAN', 'Lomas', 'Lomas', true),
+('160543', 'FARIAS, SEBASTIAN', 'Lomas', 'Lomas', true),
+('176119', 'GUAGLIANO, GABRIEL ALBERTO', 'Lomas', 'Lomas', true),
+('176576', 'OSINAGA, SEBASTIAN', 'Lomas', 'Lomas', true),
+('177587', 'FERREIRA, RODRIGO ARIEL', 'Lomas', 'Lomas', true),
+('500175', 'PAEZ, ROBERTO', 'Lomas', 'Lomas', true),
+('184520', 'GOMEZ GUZMAN, GUSTAVO', 'Lomas', 'Lomas', true),
+('146643', 'SEIVA, FERNANDO', 'Lomas', 'Ms Lomas', true),
+('146696', 'SIEMSEN, PEDRO', 'Lomas', 'Ms Lomas', true),
+('151020', 'CAMBIAGNO, CRISTIAN EZEQUIEL', 'Lomas', 'Ms Lomas', true),
+('503017', 'RUIZ, JORGE EZEQUIEL', 'Lomas', 'Ms Lomas', true),
+('166088', 'CISNEROS, CLAUDIO CESAR', 'Lomas', 'Ms Lomas', true),
+('142594', 'FERNANDEZ, HECTOR', 'Lomas', 'Ms Lomas', true),
+('175011', 'FERRADA GUILLEN, JONATAN', 'Lomas', 'Ms Lomas', true),
+('503476', 'FIORENTINO, NICOLAS LEON', 'Lomas', 'Ms Lomas', true),
+('141930', 'CUFRE, ROBERTO HERNAN', 'Lomas', 'Solano', true),
+('147715', 'GUTIERREZ, LUIS OMAR', 'Lomas', 'Solano', true),
+('151078', 'CORBALAN, CLAUDIO DANIEL', 'Lomas', 'Solano', true),
+('151266', 'SZOSTAK, DARIO', 'Lomas', 'Solano', true),
+('159285', 'SUAREZ, JONATAN EMANUEL', 'Lomas', 'Solano', true),
+('171617', 'AGUILERA, LUIS ALBERTO', 'Lomas', 'Solano', true),
+('175038', 'FRESCO, MARCELO', 'Lomas', 'Solano', true),
+('151472', 'ESTECHE, PATRICIO DANIEL', 'Lomas', 'Solano', true),
+('182397', 'FIGUEREDO, GUSTAVO EZEQUIEL', 'Lomas', 'Solano', true),
+('151686', 'NAVARRO, DANIEL JULIO', 'Monte Grande', 'Adrogué', true),
+('173881', 'ENCINA, ROBERTO', 'Monte Grande', 'Adrogué', true),
+('176563', 'ANTUÑA, ERNESTO', 'Monte Grande', 'Adrogué', true),
+('176579', 'PIOL, GABRIEL EDUARDO', 'Monte Grande', 'Adrogué', true),
+('176350', 'ROMERO, MARCOS RODOLFO', 'Monte Grande', 'Adrogué', true),
+('146693', 'SIDERO, RUBEN OSCAR', 'Monte Grande', 'Adrogué', true),
+('503497', 'FERREIRA, FAVIO', 'Monte Grande', 'Adrogué', true),
+('184492', 'QUIROZ, ANDRÉS SEBASTIÁN', 'Monte Grande', 'Adrogué', true),
+('176547', 'ACOSTA, FACUNDO', 'Monte Grande', 'Adrogué', true),
+('140113', 'AGUIRRE, LEONARDO LUIS', 'Monte Grande', 'Burzaco', true),
+('174052', 'SALINAS, LUCIANO RAUL', 'Monte Grande', 'Burzaco', true),
+('148361', 'VERA, FERNANDO LUIS', 'Monte Grande', 'Burzaco', true),
+('151473', 'CASTRO, MAURO NICOLAS', 'Monte Grande', 'Burzaco', true),
+('500825', 'SOSA, FRANCISCO', 'Monte Grande', 'Burzaco', true),
+('182389', 'ALBORNOZ, ERNESTO DAMIAN', 'Monte Grande', 'Burzaco', true),
+('503647', 'FERRI, BRIAN EZEQUIEL', 'Monte Grande', 'Burzaco', true),
+('501010', 'ARIAS, BERNARDO RICARDO', 'Monte Grande', 'Burzaco', true),
+('147464', 'ZACARIAS, RAMON BLAS', 'Monte Grande', 'Burzaco', true),
+('183246', 'SIDERO, SERGIO EDUARDO', 'Monte Grande', 'Burzaco', true),
+('501012', 'PAZ, MARIO LEONARDO', 'Monte Grande', 'Burzaco', true),
+('144835', 'MORA, JOSE ANDRES', 'Monte Grande', 'Ezeiza', true),
+('151500', 'GAMBOA, JULIO', 'Monte Grande', 'Ezeiza', true),
+('161006', 'CARBAJAL, PABLO ENRIQUE', 'Monte Grande', 'Ezeiza', true),
+('156909', 'LOPEZ, CESAR', 'Monte Grande', 'Ezeiza', true),
+('173781', 'LOPEZ, NORBERTO HERNAN', 'Monte Grande', 'Ezeiza', true),
+('10001122', 'GARCIA, MARIANO GASTON', 'Monte Grande', 'Ezeiza', true),
+('159532', 'BRODA, PABLO', 'Monte Grande', 'Ezeiza', true),
+('142789', 'FRALLICIARDI, SERGIO', 'Monte Grande', 'Ezeiza', true),
+('174723', 'ROMERO, PABLO HERNAN', 'Monte Grande', 'Ezeiza', true),
+('157629', 'RAZURI, RAMON', 'Monte Grande', 'Ezeiza', true),
+('142311', 'DOMINGUEZ, JORGE C', 'Monte Grande', 'Ezeiza', true),
+('159284', 'SORIA, FERNANDO', 'Monte Grande', 'Ezeiza', true),
+('171703', 'VALLEJOS, FEDERICO SEBASTIAN', 'Monte Grande', 'Ezeiza', true),
+('143167', 'GIRIC, ALEJANDRO', 'Monte Grande', 'Monte Grande', true),
+('150326', 'GALEANO, ALFREDO EZEQUIEL', 'Monte Grande', 'Monte Grande', true),
+('150751', 'LOPEZ, LUCAS GUSTAVO', 'Monte Grande', 'Monte Grande', true),
+('175017', 'JIMENEZ, JUAN', 'Monte Grande', 'Monte Grande', true),
+('173830', 'ESCOBAR, MAXIMILIANO', 'Monte Grande', 'Monte Grande', true),
+('149915', 'SALINAS, CRISTIAN', 'Monte Grande', 'Monte Grande', true),
+('151506', 'CENTURION, JUAN EDUARDO', 'Monte Grande', 'Monte Grande', true),
+('176570', 'JUAREZ, MATIAS LUCAS', 'Monte Grande', 'Monte Grande', true),
+('176117', 'DIANA, PABLO DANIEL', 'Monte Grande', 'Monte Grande', true),
+('500109', 'MACIEL, GASTON RICARDO', 'Monte Grande', 'Monte Grande', true),
+('151679', 'JOHNTONE, SANTIAGO ANDRES', 'Monte Grande', 'Ms Monte Grande', true),
+('503008', 'FERNANDEZ, FACUNDO RODRIGO', 'Monte Grande', 'Ms Monte Grande', true),
+('503011', 'CARNELLI, DAMIÁN', 'Monte Grande', 'Ms Monte Grande', true),
+('500784', 'GIL, CRISTIAN DAMIAN', 'Monte Grande', 'Ms Monte Grande', true),
+('148368', 'FIORENTINO, DAMIAN', 'Monte Grande', 'Ms Monte Grande', true),
+('151924', 'GONZALEZ, ANIBAL DAMIAN', 'Monte Grande', 'Ms Monte Grande', true),
+('182399', 'FIGUEREDO, CARLOS', 'Monte Grande', 'Ms Monte Grande', true),
+('184422', 'PITA, MARIO ALEJANDRO', 'Monte Grande', 'Ms Monte Grande', true),
+('504408', 'VAN SCHAIK, NICOLAS EXEQUIEL', 'Monte Grande', 'Ms Monte Grande', true)
+ON CONFLICT (legajo) DO UPDATE SET
+  nombre = EXCLUDED.nombre,
+  distrito = EXCLUDED.distrito,
+  celula = EXCLUDED.celula,
+  activo = EXCLUDED.activo;
+
+-- 2. Vincular automáticamente a los técnicos con sus líderes según la célula (limpiando texto)
+CREATE OR REPLACE FUNCTION public.limpiar_texto(t TEXT) RETURNS TEXT AS $$
+BEGIN
+    RETURN LOWER(TRANSLATE(REPLACE(t, '_', ' '), 'ÁÉÍÓÚáéíóúÑñ', 'AEIOUaeiounn'));
+END;
+$$ LANGUAGE plpgsql;
+
+-- Mapear y actualizar lider_id en la tabla tecnicos
+UPDATE public.tecnicos t
+SET lider_id = u.id
+FROM public.usuarios u
+WHERE (
+  (u.nombre = 'ADORNO, RUBEN DARIO' AND public.limpiar_texto(t.celula) = 'berazategui') OR
+  (u.nombre = 'CORDOBA, MAXIMILIANO GASTON' AND public.limpiar_texto(t.celula) = 'bernal') OR
+  (u.nombre = 'ARMIGNACCO, ADRIAN PABLO' AND public.limpiar_texto(t.celula) = 'ms varela') OR
+  (u.nombre = 'PEREZ, RICARDO DANIEL' AND public.limpiar_texto(t.celula) = 'quilmes') OR
+  (u.nombre = 'MEREP, FERNANDO DANIEL' AND public.limpiar_texto(t.celula) = 'ranelagh') OR
+  (u.nombre = 'GONZALEZ, HERNAN RAFAEL' AND public.limpiar_texto(t.celula) = 'varela 1') OR
+  (u.nombre = 'LUNA, NORBERTO' AND public.limpiar_texto(t.celula) = 'varela 2') OR
+  (u.nombre = 'D''ADAMO, LEANDRO MARTIN' AND public.limpiar_texto(t.celula) = 'gm lanus') OR
+  (u.nombre = 'MARCHAT, JONATAN JAVIER' AND public.limpiar_texto(t.celula) = 'gm lomas') OR
+  (u.nombre = 'ROMERO, GUSTAVO MANUEL' AND public.limpiar_texto(t.celula) = 'gm monte grande') OR
+  (u.nombre = 'AMIGO, SEBASTIAN' AND public.limpiar_texto(t.celula) = 'gm quilmes varela') OR
+  (u.nombre = 'BORGIONE, SERGIO NICOLAS' AND public.limpiar_texto(t.celula) = 'lanus') OR
+  (u.nombre = 'SOBRINO, ESTEBAN ANIBAL' AND public.limpiar_texto(t.celula) = 'monte chingolo') OR
+  (u.nombre = 'ALBANESE, JESUS MARIA' AND public.limpiar_texto(t.celula) = 'ms lanus') OR
+  (u.nombre = 'DI SANTO, NICOLAS' AND (public.limpiar_texto(t.celula) = 'pineyro' OR public.limpiar_texto(t.celula) = 'piñeyro')) OR
+  (u.nombre = 'LIGUORI, DANIEL GERMAN' AND public.limpiar_texto(t.celula) = 'sarandi') OR
+  (u.nombre = 'GOMEZ, SERGIO LEONARDO' AND public.limpiar_texto(t.celula) = 'banfield') OR
+  (u.nombre = 'MARZANA, JORGE DANIEL' AND public.limpiar_texto(t.celula) = 'calzada') OR
+  (u.nombre = 'RIOS, ORLANDO ANIBAL' AND public.limpiar_texto(t.celula) = 'llavallol') OR
+  (u.nombre = 'MARCHAT, ALEJANDRO ALBERTO' AND public.limpiar_texto(t.celula) = 'lomas') OR
+  (u.nombre = 'MARTINEZ, PABLO' AND public.limpiar_texto(t.celula) = 'ms lomas') OR
+  (u.nombre = 'SILVEIRA, ALEJANDRO' AND public.limpiar_texto(t.celula) = 'solano') OR
+  (u.nombre = 'CADARIO, PABLO' AND public.limpiar_texto(t.celula) = 'gestion contrata') OR
+  (u.nombre = 'GRISOLIA, CAMILO' AND public.limpiar_texto(t.celula) = 'mant prev capital') OR
+  (u.nombre = 'KOZDRON, MATIAS NICOLAS' AND public.limpiar_texto(t.celula) = 'mant prev sur') OR
+  (u.nombre = 'CORNEJO BENITEZ, DEMIAN DARIO' AND public.limpiar_texto(t.celula) = 'adrogue') OR
+  (u.nombre = 'MAZEIKAITE, GUSTAVO' AND public.limpiar_texto(t.celula) = 'burzaco') OR
+  (u.nombre = 'MEZA, JORGE' AND public.limpiar_texto(t.celula) = 'ezeiza') OR
+  (u.nombre = 'MARIANI, NORBERTO MAXIMILIANO' AND public.limpiar_texto(t.celula) = 'monte grande') OR
+  (u.nombre = 'SALDIAS, PABLO FERNANDO' AND public.limpiar_texto(t.celula) = 'ms monte grande')
+);
+
+-- Limpiar función temporal
+DROP FUNCTION public.limpiar_texto(TEXT);
