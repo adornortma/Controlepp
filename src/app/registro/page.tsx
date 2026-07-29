@@ -642,6 +642,19 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                         <Trash2 className="h-5 w-5" />
                       </button>
                     </div>
+
+                    <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm flex flex-col gap-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Escriba el Número de Serie (Opcional):
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Ej. ESC-100293"
+                        value={numeroSerie}
+                        onChange={(e) => setNumeroSerie(e.target.value)}
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-mono font-semibold text-lg bg-white text-indigo-700 placeholder:text-slate-300"
+                      />
+                    </div>
                   </div>
                 )}
               </div>
@@ -730,7 +743,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                   </div>
                   <h2 className="text-2xl font-extrabold text-slate-900 mt-1">Observaciones</h2>
                   <p className="text-slate-500 text-sm mt-1">
-                    Agregue comentarios adicionales sobre el estado de la escalera o el proceso.
+                    Si desea, agregue comentarios adicionales sobre la escalera o el proceso.
                   </p>
                 </div>
 
