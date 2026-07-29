@@ -33,8 +33,16 @@ export default function AdminDashboardPage() {
   const [cargando, setCargando] = useState(true);
   const [filtroTexto, setFiltroTexto] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
+  const [filtroDistrito, setFiltroDistrito] = useState<string>('todos');
+  const [filtroCelula, setFiltroCelula] = useState<string>('todos');
+  const [filtroLider, setFiltroLider] = useState<string>('todos');
   const [registroSeleccionado, setRegistroSeleccionado] = useState<Registro | null>(null);
   const [actualizandoEstado, setActualizandoEstado] = useState(false);
+
+  // Resetear la célula cuando cambie el distrito
+  useEffect(() => {
+    setFiltroCelula('todos');
+  }, [filtroDistrito]);
 
   // Redirigir a login si no es administrador
   useEffect(() => {
@@ -76,6 +84,23 @@ export default function AdminDashboardPage() {
     }
   }, [profile]);
 
+  // Listados únicos de filtros dinámicos
+  const distritosDisponibles = Array.from(new Set(registros.map((r: any) => r.distrito).filter(Boolean))) as string[];
+  distritosDisponibles.sort();
+
+  const celulasDisponibles = Array.from(
+    new Set(
+      registros
+        .filter((r: any) => filtroDistrito === 'todos' || r.distrito === filtroDistrito)
+        .map((r: any) => r.central)
+        .filter(Boolean)
+    )
+  ) as string[];
+  celulasDisponibles.sort();
+
+  const lideresDisponibles = Array.from(new Set(registros.map((r: any) => r.lider_nombre).filter(Boolean))) as string[];
+  lideresDisponibles.sort();
+
   if (loading || !profile || profile.rol !== 'administrador') {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 min-h-screen">
@@ -88,21 +113,18 @@ export default function AdminDashboardPage() {
   // Filtrado de registros
   const registrosFiltrados = registros.filter((reg) => {
     const matchEstado = filtroEstado === 'todos' || reg.estado === filtroEstado;
-    const cleanTexto = filtroTexto.toLowerCase().trim();
-    if (!cleanTexto) return matchEstado;
+    const matchDistrito = filtroDistrito === 'todos' || (reg as any).distrito === filtroDistrito;
+    const matchCelula = filtroCelula === 'todos' || (reg as any).central === filtroCelula;
+    const matchLider = filtroLider === 'todos' || (reg as any).lider_nombre === filtroLider;
 
-    const liderNombre = (reg as any).lider_nombre?.toLowerCase() || '';
-    const centralNombre = (reg as any).central?.toLowerCase() || '';
-    const distritoNombre = (reg as any).distrito?.toLowerCase() || '';
+    const cleanTexto = filtroTexto.toLowerCase().trim();
+    if (!cleanTexto) return matchEstado && matchDistrito && matchCelula && matchLider;
+
     const matchTexto =
       reg.tecnico_nombre.toLowerCase().includes(cleanTexto) ||
-      centralNombre.includes(cleanTexto) ||
-      distritoNombre.includes(cleanTexto) ||
-      reg.numero_serie.toLowerCase().includes(cleanTexto) ||
-      liderNombre.includes(cleanTexto) ||
-      (reg.observaciones && reg.observaciones.toLowerCase().includes(cleanTexto));
+      reg.numero_serie.toLowerCase().includes(cleanTexto);
 
-    return matchEstado && matchTexto;
+    return matchEstado && matchDistrito && matchCelula && matchLider && matchTexto;
   });
 
   // Métricas
@@ -302,31 +324,95 @@ export default function AdminDashboardPage() {
         {/* Listado Principal de Registros */}
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex-1 flex flex-col min-h-[400px]">
           {/* Barra de Filtros y Búsqueda */}
-          <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="relative w-full md:max-w-md">
-              <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
-                <Search className="h-4 w-4" />
-              </span>
-              <input
-                type="text"
-                placeholder="Buscar técnico, legajo, serie, líder..."
-                value={filtroTexto}
-                onChange={(e) => setFiltroTexto(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-500 transition shadow-inner"
-              />
+          <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              {/* Buscador de Técnico y Serie */}
+              <div className="relative col-span-1 sm:col-span-2">
+                <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                  <Search className="h-4 w-4" />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Buscar por Técnico o N° Serie..."
+                  value={filtroTexto}
+                  onChange={(e) => setFiltroTexto(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition shadow-sm text-slate-900"
+                />
+              </div>
+
+              {/* Selector de Distrito */}
+              <div>
+                <select
+                  value={filtroDistrito}
+                  onChange={(e) => setFiltroDistrito(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm"
+                >
+                  <option value="todos">📍 Todos los Distritos</option>
+                  {distritosDisponibles.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Selector de Célula */}
+              <div>
+                <select
+                  value={filtroCelula}
+                  onChange={(e) => setFiltroCelula(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm"
+                  disabled={celulasDisponibles.length === 0}
+                >
+                  <option value="todos">🏢 Todas las Células</option>
+                  {celulasDisponibles.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Selector de Líder */}
+              <div>
+                <select
+                  value={filtroLider}
+                  onChange={(e) => setFiltroLider(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm"
+                >
+                  <option value="todos">👨‍💼 Todos los Líderes</option>
+                  {lideresDisponibles.map((l) => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div className="flex gap-2 w-full md:w-auto shrink-0 justify-end">
-              <select
-                value={filtroEstado}
-                onChange={(e) => setFiltroEstado(e.target.value)}
-                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/25"
-              >
-                <option value="todos">Todos los Estados</option>
-                <option value="pendiente">Pendientes</option>
-                <option value="aprobado">Aprobados</option>
-                <option value="observado">Observados</option>
-              </select>
+            {/* Fila inferior de filtros (Estado) */}
+            <div className="flex flex-wrap gap-2 items-center justify-between border-t border-slate-100 pt-3 text-xs">
+              <div className="text-slate-400 font-medium">
+                Mostrando <strong className="text-indigo-600">{registrosFiltrados.length}</strong> de {registros.length} registros
+              </div>
+
+              <div className="flex gap-1.5">
+                {[
+                  { key: 'todos', label: 'Todos' },
+                  { key: 'pendiente', label: 'Pendientes' },
+                  { key: 'aprobado', label: 'Aprobados' },
+                  { key: 'observado', label: 'Observados' }
+                ].map((est) => {
+                  const active = filtroEstado === est.key;
+                  return (
+                    <button
+                      key={est.key}
+                      onClick={() => setFiltroEstado(est.key)}
+                      className={`px-3 py-1.5 rounded-lg font-bold transition active:scale-95 cursor-pointer ${
+                        active
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-white hover:bg-slate-50 text-slate-600 border border-slate-200'
+                      }`}
+                    >
+                      {est.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
