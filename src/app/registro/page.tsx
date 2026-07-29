@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { supabase, Usuario, Tecnico } from '@/lib/supabase';
-import { Camera } from '@/components/camera';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
+import { compressImage } from '@/utils/image-compression';
 import {
   ChevronLeft,
   ChevronRight,
@@ -62,8 +62,9 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
   const [guardando, setGuardando] = useState(false);
   const [guardadoExitoso, setGuardadoExitoso] = useState(false);
 
-  // Carga de cámara activa en cada paso
-  const [showCamera, setShowCamera] = useState(false);
+  // Referencia para capturar fotos nativas del celular
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeCaptureType, setActiveCaptureType] = useState<'advertencia' | 'numero_serie' | 'escalera' | null>(null);
 
   // Cargar técnicos activos del distrito correspondiente de Supabase
   useEffect(() => {
@@ -139,12 +140,48 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
       return;
     }
     setStep((prev) => Math.min(prev + 1, totalSteps - 1));
-    setShowCamera(false);
   };
 
   const retroceder = () => {
     setStep((prev) => Math.max(prev - 1, 0));
-    setShowCamera(false);
+  };
+
+  const triggerCapture = (type: 'advertencia' | 'numero_serie' | 'escalera') => {
+    setActiveCaptureType(type);
+    setTimeout(() => {
+      fileInputRef.current?.click();
+    }, 50);
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const loadingToast = toast.loading('Procesando y optimizando imagen...');
+    try {
+      // Comprimir la imagen nativa tomada a 1280px con buena calidad
+      const compressedBlob = await compressImage(file, 1280, 1280, 0.85);
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64 = event.target?.result as string;
+        if (activeCaptureType === 'advertencia') {
+          setFotoAdvertencia(base64);
+        } else if (activeCaptureType === 'numero_serie') {
+          setFotoNumeroSerie(base64);
+        } else if (activeCaptureType === 'escalera') {
+          setFotoEscalera(base64);
+        }
+        toast.dismiss(loadingToast);
+        toast.success('Imagen cargada correctamente');
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      };
+      reader.readAsDataURL(compressedBlob);
+    } catch (err) {
+      console.error('Error al procesar la imagen:', err);
+      toast.dismiss(loadingToast);
+      toast.error('Error al procesar la imagen nativa');
+    }
   };
 
   const base64ToBlob = (base64: string): Blob => {
@@ -173,7 +210,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
     setGuardando(true);
 
     try {
-      // 1. Validar en cliente que existan las fotos obligatorias
+      // Validar en cliente que existan las fotos obligatorias
       const blobAdvertencia = base64ToBlob(fotoAdvertencia);
       const blobNumeroSerie = base64ToBlob(fotoNumeroSerie);
       const blobEscalera = base64ToBlob(fotoEscalera);
@@ -185,16 +222,16 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
       const liderNombre = tecnicoSeleccionadoObj.usuarios?.nombre || null;
       const liderId = tecnicoSeleccionadoObj.lider_id || null;
 
-      // 2. Insertar Registro (Asociando los IDs relacionales obtenidos)
+      // Insertar Registro
       const { data: registro, error: insertError } = await supabase
         .from('registros')
         .insert({
           tecnico_id: tecnicoSeleccionadoObj.id,
-          usuario_id: liderId, // El ID de su supervisor
+          usuario_id: liderId,
           tecnico_nombre: tecnicoSeleccionadoObj.nombre,
           tecnico_legajo: tecnicoSeleccionadoObj.legajo,
           distrito: defaultDistrito,
-          central: celulaSeleccionada, // Célula
+          central: celulaSeleccionada,
           lider_nombre: liderNombre,
           numero_serie: numeroSerie.trim() || 'S/N',
           estado: 'pendiente',
@@ -210,7 +247,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
       const anio = new Date().getFullYear();
       const mes = String(new Date().getMonth() + 1).padStart(2, '0');
 
-      // 3. Subir fotos a Supabase Storage y registrar en la DB
+      // Subir fotos a Supabase Storage y registrar en la DB
       const fotosSubir = [
         { tipo: 'advertencia', data: fotoAdvertencia },
         { tipo: 'numero_serie', data: fotoNumeroSerie },
@@ -220,7 +257,6 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
       for (const f of fotosSubir) {
         const fileBlob = base64ToBlob(f.data);
         const fileName = `${f.tipo}.jpg`;
-        // Organizar imágenes en carpetas por año/mes/registro
         const filePath = `${anio}/${mes}/${registroId}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
@@ -233,12 +269,10 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
 
         if (uploadError) throw uploadError;
 
-        // Obtener URL pública
         const { data: { publicUrl } } = supabase.storage
           .from('fotos-escaleras')
           .getPublicUrl(filePath);
 
-        // Guardar relación de foto en la base de datos
         const { error: dbFotoError } = await supabase
           .from('fotos')
           .insert({
@@ -277,18 +311,26 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
     setNumeroSerie('');
     setObservaciones('');
     setGuardadoExitoso(false);
-    setShowCamera(false);
   };
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-slate-50 relative pb-24">
+      {/* Input oculto para gatillar la cámara nativa del teléfono */}
+      <input
+        type="file"
+        accept="image/*"
+        capture="environment"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
       {/* Header Fijo */}
       <header className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between z-30">
         <div>
           <h1 className="font-bold text-slate-900 leading-tight">Cuidado y señalización de escaleras</h1>
           <p className="text-xs text-slate-500 font-medium">Formulario de Colocación de Calcos</p>
         </div>
-        {/* Acceso rápido a Admin si el usuario de la sesión es administrador */}
         {profile?.rol === 'administrador' && (
           <button
             onClick={() => router.push('/admin/dashboard')}
@@ -476,7 +518,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                   <h2 className="text-2xl font-extrabold text-slate-900 mt-1">Recomendaciones y ejemplos</h2>
                 </div>
 
-                {!showCamera && !fotoAdvertencia ? (
+                {!fotoAdvertencia ? (
                   /* Guía visual */
                   <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
                     <div className="bg-indigo-50 border border-indigo-100/50 rounded-xl p-4 flex gap-3 text-indigo-900">
@@ -517,34 +559,23 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                     </div>
 
                     <button
-                      onClick={() => setShowCamera(true)}
+                      onClick={() => triggerCapture('advertencia')}
                       className="w-full mt-2 py-4 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-lg shadow-emerald-600/10 active:scale-98 transition flex items-center justify-center gap-2 text-base"
                     >
                       <CameraIcon className="h-5 w-5" /> Tomar Fotografía
                     </button>
                   </div>
-                ) : showCamera ? (
-                  <Camera
-                    onCapture={(base64) => {
-                      setFotoAdvertencia(base64);
-                      setShowCamera(false);
-                    }}
-                    aspectRatioLabel="ADVERTENCIA"
-                  />
                 ) : (
                   /* Vista previa de foto capturada */
                   <div className="flex flex-col gap-4 items-center">
                     <div className="relative w-full aspect-[3/4] bg-slate-900 rounded-2xl overflow-hidden shadow-md border border-slate-100">
                       <img
-                        src={fotoAdvertencia || undefined}
+                        src={fotoAdvertencia}
                         alt="Advertencia Colocada"
                         className="w-full h-full object-cover"
                       />
                       <button
-                        onClick={() => {
-                          setFotoAdvertencia(null);
-                          setShowCamera(true);
-                        }}
+                        onClick={() => setFotoAdvertencia(null)}
                         className="absolute bottom-4 right-4 bg-black/60 hover:bg-red-600 backdrop-blur-md p-3 text-white rounded-full border border-white/10 active:scale-90 transition"
                       >
                         <Trash2 className="h-5 w-5" />
@@ -568,7 +599,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                   </p>
                 </div>
 
-                {!showCamera && !fotoNumeroSerie ? (
+                {!fotoNumeroSerie ? (
                   /* Guía visual */
                   <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
                     <div className="bg-indigo-50 border border-indigo-100/50 rounded-xl p-4 flex gap-3 text-indigo-900">
@@ -609,34 +640,23 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                     </div>
 
                     <button
-                      onClick={() => setShowCamera(true)}
+                      onClick={() => triggerCapture('numero_serie')}
                       className="w-full mt-2 py-4 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-lg shadow-emerald-600/10 active:scale-98 transition flex items-center justify-center gap-2 text-base"
                     >
                       <CameraIcon className="h-5 w-5" /> Tomar Fotografía
                     </button>
                   </div>
-                ) : showCamera ? (
-                  <Camera
-                    onCapture={(base64) => {
-                      setFotoNumeroSerie(base64);
-                      setShowCamera(false);
-                    }}
-                    aspectRatioLabel="NUMERO SERIE"
-                  />
                 ) : (
                   /* Vista previa e ingreso del número */
                   <div className="flex flex-col gap-4">
                     <div className="relative w-full aspect-[3/4] bg-slate-900 rounded-2xl overflow-hidden shadow-md border border-slate-100">
                       <img
-                        src={fotoNumeroSerie || undefined}
+                        src={fotoNumeroSerie}
                         alt="Número de Serie"
                         className="w-full h-full object-cover"
                       />
                       <button
-                        onClick={() => {
-                          setFotoNumeroSerie(null);
-                          setShowCamera(true);
-                        }}
+                        onClick={() => setFotoNumeroSerie(null)}
                         className="absolute bottom-4 right-4 bg-black/60 hover:bg-red-600 backdrop-blur-md p-3 text-white rounded-full border border-white/10 active:scale-90 transition"
                       >
                         <Trash2 className="h-5 w-5" />
@@ -675,10 +695,9 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                   </p>
                 </div>
 
-                {!showCamera && !fotoEscalera ? (
+                {!fotoEscalera ? (
                   /* Guía visual */
                   <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
-
                     <div className="flex flex-col gap-2">
                       <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                         Recomendación:
@@ -690,35 +709,24 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
 
                     <div className="flex flex-col gap-2 mt-2">
                       <button
-                        onClick={() => setShowCamera(true)}
+                        onClick={() => triggerCapture('escalera')}
                         className="w-full py-4 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg active:scale-98 transition flex items-center justify-center gap-2 text-base"
                       >
                         <CameraIcon className="h-5 w-5" /> Tomar Fotografía
                       </button>
                     </div>
                   </div>
-                ) : showCamera ? (
-                  <Camera
-                    onCapture={(base64) => {
-                      setFotoEscalera(base64);
-                      setShowCamera(false);
-                    }}
-                    aspectRatioLabel="ESCALERA COMPLETA"
-                  />
                 ) : (
                   /* Vista previa */
                   <div className="flex flex-col gap-4">
                     <div className="relative w-full aspect-[3/4] bg-slate-900 rounded-2xl overflow-hidden shadow-md border border-slate-100">
                       <img
-                        src={fotoEscalera || undefined}
+                        src={fotoEscalera}
                         alt="Escalera Completa"
                         className="w-full h-full object-cover"
                       />
                       <button
-                        onClick={() => {
-                          setFotoEscalera(null);
-                          setShowCamera(true);
-                        }}
+                        onClick={() => setFotoEscalera(null)}
                         className="absolute bottom-4 right-4 bg-black/60 hover:bg-red-600 backdrop-blur-md p-3 text-white rounded-full border border-white/10 active:scale-90 transition"
                       >
                         <Trash2 className="h-5 w-5" />
@@ -897,7 +905,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                 </>
               )}
             </button>
-          ) : null /* En el paso 0, el botón "Continuar" está dentro de la tarjeta de confirmación */}
+          ) : null}
         </div>
       )}
     </div>
