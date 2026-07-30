@@ -4,10 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { toast } from 'sonner';
-import { ShieldCheck, Mail, Lock, RefreshCw } from 'lucide-react';
+import { ShieldCheck, User as UserIcon, Lock, RefreshCw } from 'lucide-react';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const { login, profile, user, loading } = useAuth();
@@ -26,20 +26,24 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
+    const rawInput = usernameOrEmail.trim();
+    if (!rawInput || !password.trim()) {
       toast.error('Por favor complete todos los campos');
       return;
     }
 
     setSubmitting(true);
-    const { error } = await login(email.trim(), password);
+
+    // Si el usuario no contiene '@', le agregamos el sufijo del dominio por defecto para Supabase Auth
+    const formattedEmail = rawInput.includes('@') ? rawInput : `${rawInput}@escaleras.com`;
+
+    const { error } = await login(formattedEmail, password);
 
     if (error) {
       toast.error(error);
       setSubmitting(false);
     } else {
       toast.success('Sesión iniciada correctamente');
-      // La redirección ocurre automáticamente en el useEffect
     }
   };
 
@@ -71,22 +75,21 @@ export default function LoginPage() {
         <div className="bg-white py-8 px-6 shadow-xl rounded-2xl border border-slate-100 sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-slate-700">
-                Correo Electrónico
+              <label htmlFor="username" className="block text-sm font-semibold text-slate-700">
+                Usuario o Correo Electrónico
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                  <Mail className="h-5 w-5" />
+                  <UserIcon className="h-5 w-5" />
                 </div>
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
+                  id="username"
+                  name="username"
+                  type="text"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ejemplo@empresa.com"
+                  value={usernameOrEmail}
+                  onChange={(e) => setUsernameOrEmail(e.target.value)}
+                  placeholder="ej: jarae"
                   className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm bg-white text-slate-900 transition duration-150"
                 />
               </div>
@@ -136,10 +139,10 @@ export default function LoginPage() {
           <div className="mt-6 border-t border-slate-100 pt-6">
             <div className="rounded-xl bg-slate-50 p-4 border border-slate-100">
               <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                Credenciales de prueba:
+                Credenciales de acceso:
               </h4>
               <p className="mt-1 text-xs text-slate-500">
-                Puedes iniciar sesión registrando la cuenta admin semilla en tu Supabase Console con el email <strong className="text-indigo-600">admin@escaleras.com</strong> y la contraseña <strong className="text-indigo-600">Adornor</strong>.
+                Puedes iniciar sesión con el usuario <strong className="text-indigo-600">jarae</strong> y la contraseña <strong className="text-indigo-600">Bera2026</strong>.
               </p>
             </div>
           </div>
