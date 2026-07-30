@@ -25,8 +25,9 @@ import {
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
-  const { user, profile, loading, logout } = useAuth();
   const router = useRouter();
+  const profile = { nombre: 'Administrador Semilla' };
+  const logout = () => { router.push('/'); };
 
   // Estados de carga y datos
   const [registros, setRegistros] = useState<Registro[]>([]);
@@ -43,17 +44,6 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     setFiltroCelula('todos');
   }, [filtroDistrito]);
-
-  // Redirigir a login si no es administrador
-  useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        router.replace('/login');
-      } else if (profile && profile.rol !== 'administrador') {
-        router.replace('/registro');
-      }
-    }
-  }, [user, profile, loading, router]);
 
   // Cargar datos del dashboard
   const fetchRegistros = async () => {
@@ -79,10 +69,8 @@ export default function AdminDashboardPage() {
   };
 
   useEffect(() => {
-    if (profile && profile.rol === 'administrador') {
-      fetchRegistros();
-    }
-  }, [profile]);
+    fetchRegistros();
+  }, []);
 
   // Listados únicos de filtros dinámicos
   const distritosDisponibles = Array.from(new Set(registros.map((r: any) => r.distrito).filter(Boolean))) as string[];
@@ -101,14 +89,7 @@ export default function AdminDashboardPage() {
   const lideresDisponibles = Array.from(new Set(registros.map((r: any) => r.lider_nombre).filter(Boolean))) as string[];
   lideresDisponibles.sort();
 
-  if (loading || !profile || profile.rol !== 'administrador') {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 min-h-screen">
-        <RefreshCw className="h-10 w-10 animate-spin text-indigo-600" />
-        <p className="mt-4 text-sm font-medium text-slate-500">Verificando credenciales de administrador...</p>
-      </div>
-    );
-  }
+
 
   // Filtrado de registros
   const registrosFiltrados = registros.filter((reg) => {
