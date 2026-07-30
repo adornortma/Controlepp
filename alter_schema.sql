@@ -69,3 +69,12 @@ CREATE POLICY "Permitir lectura pública de usuarios"
     TO anon, authenticated
     USING (activo = true);
 
+-- 8. Habilitar actualización pública/anónima de registros (para que el panel de control funcione con el bypass de admin)
+DROP POLICY IF EXISTS "Los líderes pueden actualizar sus registros" ON public.registros;
+DROP POLICY IF EXISTS "Permitir actualización pública de registros" ON public.registros;
+CREATE POLICY "Permitir actualización pública de registros"
+    ON public.registros FOR UPDATE
+    TO anon, authenticated
+    USING (true);
+
+
