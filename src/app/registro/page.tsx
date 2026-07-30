@@ -382,13 +382,6 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                   <span className="font-semibold text-slate-950">{defaultDistrito}</span>
                 </div>
               </div>
-
-              <button
-                onClick={resetForm}
-                className="w-full mt-2 py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-600/10 active:scale-[0.98] transition"
-              >
-                Registrar Otra Escalera
-              </button>
             </div>
           </div>
         ) : (
