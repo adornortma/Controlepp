@@ -213,9 +213,10 @@ export default function ProyectosDashboard() {
         
         {/* Tarjetas de Resumen */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+          {/* Card Total */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-slate-400 shadow-sm flex flex-col">
             <div className="flex items-center gap-3 mb-2">
-              <div className="bg-slate-100 p-2 rounded-lg text-slate-500">
+              <div className="bg-slate-100 p-2 rounded-lg text-slate-600">
                 <FileText className="h-5 w-5" />
               </div>
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total</h3>
@@ -224,9 +225,10 @@ export default function ProyectosDashboard() {
               {cargando ? '-' : totalProyectos}
             </div>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+          {/* Card Mantenimiento */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-emerald-500 shadow-sm flex flex-col">
             <div className="flex items-center gap-3 mb-2">
-              <div className="bg-emerald-50 p-2 rounded-lg text-emerald-600">
+              <div className="bg-emerald-100 p-2 rounded-lg text-emerald-700">
                 <Hammer className="h-5 w-5" />
               </div>
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mantenimiento</h3>
@@ -235,9 +237,10 @@ export default function ProyectosDashboard() {
               {cargando ? '-' : totalMantenimiento}
             </div>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+          {/* Card Obras */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-blue-500 shadow-sm flex flex-col">
             <div className="flex items-center gap-3 mb-2">
-              <div className="bg-blue-50 p-2 rounded-lg text-blue-600">
+              <div className="bg-blue-100 p-2 rounded-lg text-blue-700">
                 <HardHat className="h-5 w-5" />
               </div>
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Obras</h3>
@@ -246,9 +249,10 @@ export default function ProyectosDashboard() {
               {cargando ? '-' : totalObras}
             </div>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
+          {/* Card TECO */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-purple-500 shadow-sm flex flex-col">
             <div className="flex items-center gap-3 mb-2">
-              <div className="bg-purple-50 p-2 rounded-lg text-purple-600">
+              <div className="bg-purple-100 p-2 rounded-lg text-purple-700">
                 <Zap className="h-5 w-5" />
               </div>
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">TECO</h3>
@@ -364,7 +368,12 @@ export default function ProyectosDashboard() {
                           key={proyecto.id} 
                           className="hover:bg-slate-50/80 transition-colors duration-150 group"
                         >
-                          <td className="px-5 py-4 whitespace-nowrap">
+                          <td className="px-5 py-4 whitespace-nowrap relative">
+                            <div className={`absolute left-0 top-0 bottom-0 w-1
+                              ${proyecto.ejecutado_por === 'Mantenimiento' ? 'bg-emerald-500' :
+                                proyecto.ejecutado_por === 'Obras' ? 'bg-blue-500' :
+                                'bg-purple-500'}`}
+                            ></div>
                             <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-bold tracking-wide border border-slate-200 group-hover:border-slate-300 transition-colors">
                               {proyecto.sigest}
                             </span>
@@ -387,10 +396,10 @@ export default function ProyectosDashboard() {
                             </div>
                           </td>
                           <td className="px-5 py-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border
-                              ${proyecto.ejecutado_por === 'Mantenimiento' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
-                                proyecto.ejecutado_por === 'Obras' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
-                                'bg-purple-50 text-purple-700 border-purple-200'}`}
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-sm
+                              ${proyecto.ejecutado_por === 'Mantenimiento' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 
+                                proyecto.ejecutado_por === 'Obras' ? 'bg-blue-100 text-blue-800 border-blue-300' : 
+                                'bg-purple-100 text-purple-800 border-purple-300'}`}
                             >
                               {proyecto.ejecutado_por === 'Mantenimiento' && <Hammer className="h-3.5 w-3.5" />}
                               {proyecto.ejecutado_por === 'Obras' && <HardHat className="h-3.5 w-3.5" />}
