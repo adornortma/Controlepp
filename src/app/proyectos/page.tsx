@@ -291,7 +291,7 @@ export default function ProyectosDashboard() {
                     value={formData.sigest}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900"
-                    placeholder="Ej. SIGEST-2026-001"
+
                   />
                 </div>
 
@@ -307,7 +307,7 @@ export default function ProyectosDashboard() {
                     value={formData.titulo}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900"
-                    placeholder="Ej. Renovación Central"
+
                   />
                 </div>
 
@@ -370,7 +370,7 @@ export default function ProyectosDashboard() {
                     value={formData.central}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900"
-                    placeholder="Nombre de la central"
+
                   />
                 </div>
 
@@ -386,7 +386,7 @@ export default function ProyectosDashboard() {
                     value={formData.direccion}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900"
-                    placeholder="Ej. Calle Falsa 123"
+
                   />
                 </div>
 
