@@ -132,9 +132,6 @@ export default function ProyectosDashboard() {
       <header className="bg-emerald-600 text-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/" className="hover:bg-emerald-700 p-2 rounded-lg transition-colors" title="Volver al inicio">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
             <div className="flex items-center gap-2">
               <FolderKanban className="h-6 w-6" />
               <h1 className="text-xl font-bold">Tablero de Proyectos</h1>
