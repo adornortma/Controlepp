@@ -5,10 +5,9 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { 
   Plus, X, Briefcase, Calendar, MapPin, 
-  Building2, UserCircle2, Loader2, FolderKanban,
-  FileText, Hammer, HardHat, Zap
+  Building2, Loader2, FolderKanban,
+  FileText, Hammer, HardHat, Zap, Search, Filter
 } from 'lucide-react';
-import Link from 'next/link';
 
 interface Proyecto {
   id: string;
@@ -27,6 +26,10 @@ export default function ProyectosDashboard() {
   const [cargando, setCargando] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [guardando, setGuardando] = useState(false);
+
+  // Estados para búsqueda y filtros
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filtroEjecutado, setFiltroEjecutado] = useState('Todos');
 
   // Form state
   const [formData, setFormData] = useState({
@@ -122,7 +125,23 @@ export default function ProyectosDashboard() {
     }
   };
 
-  // Indicadores calculados
+  // Lógica de filtrado y búsqueda
+  const proyectosFiltrados = proyectos.filter(proyecto => {
+    // Filtrar por término de búsqueda (SIGEST, Título, Dirección, Central)
+    const termino = searchTerm.toLowerCase();
+    const coincideBusqueda = 
+      proyecto.sigest.toLowerCase().includes(termino) ||
+      proyecto.titulo.toLowerCase().includes(termino) ||
+      proyecto.direccion.toLowerCase().includes(termino) ||
+      proyecto.central.toLowerCase().includes(termino);
+      
+    // Filtrar por Ejecutado Por
+    const coincideEjecutado = filtroEjecutado === 'Todos' || proyecto.ejecutado_por === filtroEjecutado;
+
+    return coincideBusqueda && coincideEjecutado;
+  });
+
+  // Indicadores calculados sobre el TOTAL (sin importar filtros) para dar contexto general
   const totalProyectos = proyectos.length;
   const totalMantenimiento = proyectos.filter(p => p.ejecutado_por === 'Mantenimiento').length;
   const totalObras = proyectos.filter(p => p.ejecutado_por === 'Obras').length;
@@ -207,8 +226,42 @@ export default function ProyectosDashboard() {
           </div>
         </section>
 
-        {/* Tablero Principal */}
-        <section>
+        {/* Búsqueda, Filtros y Tablero Principal */}
+        <section className="flex flex-col gap-4">
+          
+          {/* Barra de Búsqueda y Filtros */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-2">
+            {/* Buscador de texto */}
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-slate-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Buscar por SIGEST, título, dirección o central..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm transition-colors"
+              />
+            </div>
+            {/* Selector de Ejecutor */}
+            <div className="relative sm:max-w-xs w-full">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <Filter className="h-5 w-5 text-slate-400" />
+              </div>
+              <select
+                value={filtroEjecutado}
+                onChange={(e) => setFiltroEjecutado(e.target.value)}
+                className="block w-full pl-10 pr-8 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm transition-colors cursor-pointer appearance-none"
+              >
+                <option value="Todos">Todos los ejecutores</option>
+                <option value="Mantenimiento">Mantenimiento</option>
+                <option value="Obras">Obras</option>
+                <option value="TECO">TECO</option>
+              </select>
+            </div>
+          </div>
+
           {cargando ? (
             <div className="flex flex-col items-center justify-center py-20 text-emerald-600 bg-white rounded-2xl border border-slate-200 shadow-sm">
               <Loader2 className="h-10 w-10 animate-spin mb-4 text-emerald-500" />
@@ -234,6 +287,16 @@ export default function ProyectosDashboard() {
                       Nuevo proyecto
                     </button>
                   </div>
+                ) : proyectosFiltrados.length === 0 ? (
+                  <div className="text-center py-20 px-4">
+                    <div className="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-5 border border-slate-100">
+                      <Search className="h-8 w-8 text-slate-300" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-800 mb-1">Sin resultados</h3>
+                    <p className="text-slate-500 text-sm">
+                      No se encontraron proyectos que coincidan con la búsqueda.
+                    </p>
+                  </div>
                 ) : (
                   <table className="min-w-full divide-y divide-slate-200 text-left">
                     <thead className="bg-slate-50/50">
@@ -251,12 +314,15 @@ export default function ProyectosDashboard() {
                           Ejecutado Por
                         </th>
                         <th scope="col" className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                          Ubicación
+                          Dirección
+                        </th>
+                        <th scope="col" className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Central
                         </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-slate-100">
-                      {proyectos.map((proyecto) => (
+                      {proyectosFiltrados.map((proyecto) => (
                         <tr 
                           key={proyecto.id} 
                           className="hover:bg-slate-50/80 transition-colors duration-150 cursor-pointer group"
@@ -298,15 +364,15 @@ export default function ProyectosDashboard() {
                             </span>
                           </td>
                           <td className="px-6 py-5">
-                            <div className="flex flex-col gap-1.5">
-                              <div className="text-sm font-semibold text-slate-800 flex items-center gap-2">
-                                <Building2 className="h-4 w-4 text-slate-400 shrink-0" />
-                                {proyecto.central}
-                              </div>
-                              <div className="text-xs text-slate-500 flex items-center gap-2 line-clamp-1">
-                                <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                                {proyecto.direccion}
-                              </div>
+                            <div className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
+                              <MapPin className="h-4 w-4 text-slate-400 shrink-0" />
+                              {proyecto.direccion}
+                            </div>
+                          </td>
+                          <td className="px-6 py-5 whitespace-nowrap">
+                            <div className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                              <Building2 className="h-4 w-4 text-slate-400 shrink-0" />
+                              {proyecto.central}
                             </div>
                           </td>
                         </tr>
