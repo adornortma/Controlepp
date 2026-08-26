@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { 
   Plus, X, Briefcase, Calendar, MapPin, 
   Building2, Loader2, FolderKanban,
-  FileText, Hammer, HardHat, Zap, Search, Filter
+  FileText, Hammer, HardHat, Zap, Search, Filter, Pencil
 } from 'lucide-react';
 
 interface Proyecto {
@@ -26,6 +26,9 @@ export default function ProyectosDashboard() {
   const [cargando, setCargando] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  
+  // Estado para saber si estamos editando
+  const [proyectoEditando, setProyectoEditando] = useState<Proyecto | null>(null);
 
   // Estados para búsqueda y filtros
   const [searchTerm, setSearchTerm] = useState('');
@@ -75,6 +78,41 @@ export default function ProyectosDashboard() {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+  
+  const handleOpenNuevo = () => {
+    setProyectoEditando(null);
+    setFormData({
+      sigest: '',
+      titulo: '',
+      fecha_cita: '',
+      fecha_construido: '',
+      ejecutado_por: 'Mantenimiento',
+      direccion: '',
+      central: ''
+    });
+    setIsModalOpen(true);
+  };
+  
+  const handleEdit = (proyecto: Proyecto) => {
+    setProyectoEditando(proyecto);
+    setFormData({
+      sigest: proyecto.sigest,
+      titulo: proyecto.titulo,
+      fecha_cita: proyecto.fecha_cita,
+      fecha_construido: proyecto.fecha_construido || '',
+      ejecutado_por: proyecto.ejecutado_por,
+      direccion: proyecto.direccion,
+      central: proyecto.central
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    if (!guardando) {
+      setIsModalOpen(false);
+      setProyectoEditando(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,25 +135,26 @@ export default function ProyectosDashboard() {
         central: formData.central
       };
 
-      const { error } = await supabase
-        .from('proyectos')
-        .insert([payload]);
+      if (proyectoEditando) {
+        // Modo Edición
+        const { error } = await supabase
+          .from('proyectos')
+          .update(payload)
+          .eq('id', proyectoEditando.id);
+          
+        if (error) throw error;
+        toast.success('Proyecto actualizado exitosamente');
+      } else {
+        // Modo Creación
+        const { error } = await supabase
+          .from('proyectos')
+          .insert([payload]);
+          
+        if (error) throw error;
+        toast.success('Proyecto registrado exitosamente');
+      }
 
-      if (error) throw error;
-
-      toast.success('Proyecto registrado exitosamente');
-      setIsModalOpen(false);
-      
-      setFormData({
-        sigest: '',
-        titulo: '',
-        fecha_cita: '',
-        fecha_construido: '',
-        ejecutado_por: 'Mantenimiento',
-        direccion: '',
-        central: ''
-      });
-
+      handleCloseModal();
       fetchProyectos();
     } catch (err: any) {
       console.error('Error guardando proyecto:', err);
@@ -127,7 +166,6 @@ export default function ProyectosDashboard() {
 
   // Lógica de filtrado y búsqueda
   const proyectosFiltrados = proyectos.filter(proyecto => {
-    // Filtrar por término de búsqueda (SIGEST, Título, Dirección, Central)
     const termino = searchTerm.toLowerCase();
     const coincideBusqueda = 
       proyecto.sigest.toLowerCase().includes(termino) ||
@@ -135,7 +173,6 @@ export default function ProyectosDashboard() {
       proyecto.direccion.toLowerCase().includes(termino) ||
       proyecto.central.toLowerCase().includes(termino);
       
-    // Filtrar por Ejecutado Por
     const coincideEjecutado = filtroEjecutado === 'Todos' || proyecto.ejecutado_por === filtroEjecutado;
 
     return coincideBusqueda && coincideEjecutado;
@@ -151,7 +188,7 @@ export default function ProyectosDashboard() {
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       {/* Header Elegante */}
       <header className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
               <FolderKanban className="h-6 w-6 text-emerald-600" />
@@ -162,7 +199,7 @@ export default function ProyectosDashboard() {
             </p>
           </div>
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenNuevo}
             className="bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-semibold shadow-sm shadow-emerald-600/20 hover:bg-emerald-700 active:scale-95 transition-all flex items-center gap-2 whitespace-nowrap"
           >
             <Plus className="h-5 w-5" />
@@ -172,11 +209,10 @@ export default function ProyectosDashboard() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
+      <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
         
         {/* Tarjetas de Resumen */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-          {/* Card Total */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
             <div className="flex items-center gap-3 mb-2">
               <div className="bg-slate-100 p-2 rounded-lg text-slate-500">
@@ -188,7 +224,6 @@ export default function ProyectosDashboard() {
               {cargando ? '-' : totalProyectos}
             </div>
           </div>
-          {/* Card Mantenimiento */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
             <div className="flex items-center gap-3 mb-2">
               <div className="bg-emerald-50 p-2 rounded-lg text-emerald-600">
@@ -200,7 +235,6 @@ export default function ProyectosDashboard() {
               {cargando ? '-' : totalMantenimiento}
             </div>
           </div>
-          {/* Card Obras */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
             <div className="flex items-center gap-3 mb-2">
               <div className="bg-blue-50 p-2 rounded-lg text-blue-600">
@@ -212,7 +246,6 @@ export default function ProyectosDashboard() {
               {cargando ? '-' : totalObras}
             </div>
           </div>
-          {/* Card TECO */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
             <div className="flex items-center gap-3 mb-2">
               <div className="bg-purple-50 p-2 rounded-lg text-purple-600">
@@ -231,7 +264,6 @@ export default function ProyectosDashboard() {
           
           {/* Barra de Búsqueda y Filtros */}
           <div className="flex flex-col sm:flex-row gap-4 mb-2">
-            {/* Buscador de texto */}
             <div className="relative flex-1">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-slate-400" />
@@ -244,7 +276,6 @@ export default function ProyectosDashboard() {
                 className="block w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm transition-colors"
               />
             </div>
-            {/* Selector de Ejecutor */}
             <div className="relative sm:max-w-xs w-full">
               <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                 <Filter className="h-5 w-5 text-slate-400" />
@@ -280,7 +311,7 @@ export default function ProyectosDashboard() {
                       Creá el primer proyecto para comenzar a realizar el seguimiento de manera centralizada.
                     </p>
                     <button
-                      onClick={() => setIsModalOpen(true)}
+                      onClick={handleOpenNuevo}
                       className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-semibold shadow-sm hover:bg-emerald-700 active:scale-95 transition-all"
                     >
                       <Plus className="h-5 w-5" />
@@ -301,23 +332,29 @@ export default function ProyectosDashboard() {
                   <table className="min-w-full divide-y divide-slate-200 text-left">
                     <thead className="bg-slate-50/50">
                       <tr>
-                        <th scope="col" className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                        <th scope="col" className="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                           Proyecto / SIGEST
                         </th>
-                        <th scope="col" className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        <th scope="col" className="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[200px]">
                           Título
                         </th>
-                        <th scope="col" className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
-                          Fechas
+                        <th scope="col" className="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                          Fecha Cita
                         </th>
-                        <th scope="col" className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                        <th scope="col" className="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                          Fecha Construido
+                        </th>
+                        <th scope="col" className="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
                           Ejecutado Por
                         </th>
-                        <th scope="col" className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        <th scope="col" className="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
                           Dirección
                         </th>
-                        <th scope="col" className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        <th scope="col" className="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
                           Central
+                        </th>
+                        <th scope="col" className="px-4 py-4 relative">
+                          <span className="sr-only">Acciones</span>
                         </th>
                       </tr>
                     </thead>
@@ -325,33 +362,31 @@ export default function ProyectosDashboard() {
                       {proyectosFiltrados.map((proyecto) => (
                         <tr 
                           key={proyecto.id} 
-                          className="hover:bg-slate-50/80 transition-colors duration-150 cursor-pointer group"
+                          className="hover:bg-slate-50/80 transition-colors duration-150 group"
                         >
-                          <td className="px-6 py-5 whitespace-nowrap">
+                          <td className="px-5 py-4 whitespace-nowrap">
                             <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-bold tracking-wide border border-slate-200 group-hover:border-slate-300 transition-colors">
                               {proyecto.sigest}
                             </span>
                           </td>
-                          <td className="px-6 py-5">
-                            <div className="text-base font-bold text-slate-900 leading-tight">
+                          <td className="px-5 py-4">
+                            <div className="text-sm font-bold text-slate-900 leading-tight">
                               {proyecto.titulo}
                             </div>
                           </td>
-                          <td className="px-6 py-5 whitespace-nowrap">
-                            <div className="flex flex-col gap-1.5">
-                              <div className="text-xs text-slate-600 flex items-center gap-1.5 font-medium" title="Fecha de cita">
-                                <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                                <span className="w-10 text-slate-400 font-normal">Cita:</span>
-                                {proyecto.fecha_cita ? new Date(proyecto.fecha_cita + 'T00:00:00').toLocaleDateString() : '-'}
-                              </div>
-                              <div className="text-xs text-slate-600 flex items-center gap-1.5 font-medium" title="Fecha construido">
-                                <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                                <span className="w-10 text-slate-400 font-normal">Const:</span>
-                                {proyecto.fecha_construido ? new Date(proyecto.fecha_construido + 'T00:00:00').toLocaleDateString() : '-'}
-                              </div>
+                          <td className="px-5 py-4 whitespace-nowrap">
+                            <div className="text-sm text-slate-600 flex items-center gap-1.5 font-medium">
+                              <Calendar className="h-4 w-4 text-slate-400" />
+                              {proyecto.fecha_cita ? new Date(proyecto.fecha_cita + 'T00:00:00').toLocaleDateString() : '-'}
                             </div>
                           </td>
-                          <td className="px-6 py-5 whitespace-nowrap">
+                          <td className="px-5 py-4 whitespace-nowrap">
+                            <div className="text-sm text-slate-600 flex items-center gap-1.5 font-medium">
+                              <Calendar className="h-4 w-4 text-slate-400" />
+                              {proyecto.fecha_construido ? new Date(proyecto.fecha_construido + 'T00:00:00').toLocaleDateString() : '-'}
+                            </div>
+                          </td>
+                          <td className="px-5 py-4 whitespace-nowrap">
                             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border
                               ${proyecto.ejecutado_por === 'Mantenimiento' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
                                 proyecto.ejecutado_por === 'Obras' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
@@ -363,17 +398,26 @@ export default function ProyectosDashboard() {
                               {proyecto.ejecutado_por}
                             </span>
                           </td>
-                          <td className="px-6 py-5">
+                          <td className="px-5 py-4">
                             <div className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
                               <MapPin className="h-4 w-4 text-slate-400 shrink-0" />
                               {proyecto.direccion}
                             </div>
                           </td>
-                          <td className="px-6 py-5 whitespace-nowrap">
+                          <td className="px-5 py-4 whitespace-nowrap">
                             <div className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
                               <Building2 className="h-4 w-4 text-slate-400 shrink-0" />
                               {proyecto.central}
                             </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-right">
+                            <button
+                              onClick={() => handleEdit(proyecto)}
+                              className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                              title="Editar proyecto"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -395,10 +439,10 @@ export default function ProyectosDashboard() {
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <FolderKanban className="h-5 w-5 text-emerald-600" />
-                Registrar Nuevo Proyecto
+                {proyectoEditando ? 'Editar Proyecto' : 'Registrar Nuevo Proyecto'}
               </h2>
               <button 
-                onClick={() => !guardando && setIsModalOpen(false)}
+                onClick={handleCloseModal}
                 className="text-slate-400 hover:text-slate-700 hover:bg-slate-200 p-2 rounded-full transition-colors"
                 disabled={guardando}
               >
@@ -523,7 +567,7 @@ export default function ProyectosDashboard() {
               <div className="mt-8 pt-5 border-t border-slate-100 flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={handleCloseModal}
                   disabled={guardando}
                   className="px-5 py-2.5 text-slate-600 font-bold rounded-lg hover:bg-slate-100 transition-colors"
                 >
@@ -540,7 +584,7 @@ export default function ProyectosDashboard() {
                       Guardando...
                     </>
                   ) : (
-                    'Guardar Proyecto'
+                    proyectoEditando ? 'Actualizar Proyecto' : 'Guardar Proyecto'
                   )}
                 </button>
               </div>
