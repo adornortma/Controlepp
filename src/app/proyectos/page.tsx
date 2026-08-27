@@ -4,22 +4,29 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { 
-  Plus, X, Briefcase, Calendar, MapPin, 
+  Plus, X, Calendar, MapPin, 
   Building2, Loader2, FolderKanban,
-  FileText, Hammer, HardHat, Zap, Search, Filter, Pencil
+  FileText, Hammer, HardHat, Zap, Search, Filter, Pencil, Copy
 } from 'lucide-react';
 
 interface Proyecto {
   id: string;
-  sigest: string;
-  titulo: string;
-  fecha_cita: string;
-  fecha_construido: string | null;
-  fecha_conectado?: string | null;
-  ejecutado_por: 'Mantenimiento' | 'Obras' | 'TECO';
-  direccion: string;
+  activo: string;
+  address_id: string;
   central: string;
-  created_at: string;
+  sisvadi: string;
+  estado_maximo: string;
+  nombre_de_calle: string;
+  nro: string;
+  const_of: string;
+  poligono: string;
+  fecha_cita: string | null;
+  contrata: string;
+  estado: string;
+  fecha_conectado: string | null;
+  a_conectar: string;
+  c_sp: string;
+  created_at?: string;
 }
 
 // Helpers for robust date normalization
@@ -32,13 +39,11 @@ const getLocalIsoString = (d: Date) => {
 
 const normalizeDateString = (dateStr: string | null | undefined): string | null => {
   if (!dateStr) return null;
-  // If format DD/MM/YYYY or DD-MM-YYYY
   const dmmyyyyMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
   if (dmmyyyyMatch) {
     const [_, d, m, y] = dmmyyyyMatch;
     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
   }
-  // Try to parse standard ISO or JS date
   const d = new Date(dateStr);
   if (!isNaN(d.getTime())) {
     if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
@@ -49,32 +54,32 @@ const normalizeDateString = (dateStr: string | null | undefined): string | null 
   return null;
 };
 
+// Helper to determine the visual category based on const_of
+const getCategoriaVisual = (const_of: string | null | undefined): 'Mantenimiento' | 'Obras' | 'TECO' | 'Otro' => {
+  const upper = (const_of || '').toUpperCase();
+  if (upper.includes('MANTENIMIENTO')) return 'Mantenimiento';
+  if (upper.includes('OBRA')) return 'Obras';
+  if (upper.includes('TECO')) return 'TECO';
+  return 'Otro';
+};
+
 export default function ProyectosDashboard() {
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [cargando, setCargando] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [guardando, setGuardando] = useState(false);
   
-  // Estado para saber si estamos editando
   const [proyectoEditando, setProyectoEditando] = useState<Proyecto | null>(null);
 
-  // Estados para búsqueda y filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroEjecutado, setFiltroEjecutado] = useState('Todos');
-  
-  // Nuevo estado para Fecha Conectado
   const [filtroFecha, setFiltroFecha] = useState<'Todas' | 'Hoy' | 'Ayer' | 'EstaSemana' | 'Elegir'>('Todas');
   const [fechaElegida, setFechaElegida] = useState<string>('');
 
-  // Form state
   const [formData, setFormData] = useState({
-    sigest: '',
-    titulo: '',
-    fecha_cita: '',
-    fecha_construido: '',
-    ejecutado_por: 'Mantenimiento',
-    direccion: '',
-    central: ''
+    activo: '', address_id: '', central: '', sisvadi: '', estado_maximo: '',
+    nombre_de_calle: '', nro: '', const_of: '', poligono: '', fecha_cita: '',
+    contrata: '', estado: '', fecha_conectado: '', a_conectar: '', c_sp: ''
   });
 
   const fetchProyectos = async () => {
@@ -87,7 +92,7 @@ export default function ProyectosDashboard() {
 
       if (error) {
         if (error.code === '42P01') {
-          toast.error('La tabla de proyectos no existe en la base de datos. Debes ejecutar el script SQL.');
+          toast.error('La tabla de proyectos no tiene la estructura correcta. Actualiza la BD.');
         } else {
           throw error;
         }
@@ -114,13 +119,9 @@ export default function ProyectosDashboard() {
   const handleOpenNuevo = () => {
     setProyectoEditando(null);
     setFormData({
-      sigest: '',
-      titulo: '',
-      fecha_cita: '',
-      fecha_construido: '',
-      ejecutado_por: 'Mantenimiento',
-      direccion: '',
-      central: ''
+      activo: '', address_id: '', central: '', sisvadi: '', estado_maximo: '',
+      nombre_de_calle: '', nro: '', const_of: '', poligono: '', fecha_cita: '',
+      contrata: '', estado: '', fecha_conectado: '', a_conectar: '', c_sp: ''
     });
     setIsModalOpen(true);
   };
@@ -128,13 +129,21 @@ export default function ProyectosDashboard() {
   const handleEdit = (proyecto: Proyecto) => {
     setProyectoEditando(proyecto);
     setFormData({
-      sigest: proyecto.sigest,
-      titulo: proyecto.titulo,
-      fecha_cita: proyecto.fecha_cita,
-      fecha_construido: proyecto.fecha_construido || '',
-      ejecutado_por: proyecto.ejecutado_por,
-      direccion: proyecto.direccion,
-      central: proyecto.central
+      activo: proyecto.activo || '',
+      address_id: proyecto.address_id || '',
+      central: proyecto.central || '',
+      sisvadi: proyecto.sisvadi || '',
+      estado_maximo: proyecto.estado_maximo || '',
+      nombre_de_calle: proyecto.nombre_de_calle || '',
+      nro: proyecto.nro || '',
+      const_of: proyecto.const_of || '',
+      poligono: proyecto.poligono || '',
+      fecha_cita: proyecto.fecha_cita || '',
+      contrata: proyecto.contrata || '',
+      estado: proyecto.estado || '',
+      fecha_conectado: proyecto.fecha_conectado || '',
+      a_conectar: proyecto.a_conectar || '',
+      c_sp: proyecto.c_sp || ''
     });
     setIsModalOpen(true);
   };
@@ -151,37 +160,30 @@ export default function ProyectosDashboard() {
     setGuardando(true);
 
     try {
-      if (!formData.sigest || !formData.titulo || !formData.fecha_cita || !formData.direccion || !formData.central) {
-        toast.error('Por favor complete todos los campos obligatorios');
-        setGuardando(false);
-        return;
-      }
-
       const payload = {
-        sigest: formData.sigest,
-        titulo: formData.titulo,
-        fecha_cita: formData.fecha_cita,
-        fecha_construido: formData.fecha_construido ? formData.fecha_construido : null,
-        ejecutado_por: formData.ejecutado_por,
-        direccion: formData.direccion,
-        central: formData.central
+        activo: formData.activo,
+        address_id: formData.address_id,
+        central: formData.central,
+        sisvadi: formData.sisvadi,
+        estado_maximo: formData.estado_maximo,
+        nombre_de_calle: formData.nombre_de_calle,
+        nro: formData.nro,
+        const_of: formData.const_of,
+        poligono: formData.poligono,
+        fecha_cita: formData.fecha_cita ? formData.fecha_cita : null,
+        contrata: formData.contrata,
+        estado: formData.estado,
+        fecha_conectado: formData.fecha_conectado ? formData.fecha_conectado : null,
+        a_conectar: formData.a_conectar,
+        c_sp: formData.c_sp
       };
 
       if (proyectoEditando) {
-        // Modo Edición
-        const { error } = await supabase
-          .from('proyectos')
-          .update(payload)
-          .eq('id', proyectoEditando.id);
-          
+        const { error } = await supabase.from('proyectos').update(payload).eq('id', proyectoEditando.id);
         if (error) throw error;
         toast.success('Proyecto actualizado exitosamente');
       } else {
-        // Modo Creación
-        const { error } = await supabase
-          .from('proyectos')
-          .insert([payload]);
-          
+        const { error } = await supabase.from('proyectos').insert([payload]);
         if (error) throw error;
         toast.success('Proyecto registrado exitosamente');
       }
@@ -194,6 +196,11 @@ export default function ProyectosDashboard() {
     } finally {
       setGuardando(false);
     }
+  };
+
+  const copiarAlPortapapeles = (texto: string) => {
+    navigator.clipboard.writeText(texto);
+    toast.success('Copiado al portapapeles');
   };
 
   // Variables para rango de fechas
@@ -213,20 +220,22 @@ export default function ProyectosDashboard() {
   const startOfWeekStr = getLocalIsoString(startOfWeek);
   const endOfWeekStr = getLocalIsoString(endOfWeek);
 
-  // Lógica de filtrado
   const proyectosFiltrados = proyectos.filter(proyecto => {
-    // 1. Búsqueda por texto
     const termino = searchTerm.toLowerCase();
     const coincideBusqueda = 
-      proyecto.sigest.toLowerCase().includes(termino) ||
-      proyecto.titulo.toLowerCase().includes(termino) ||
-      proyecto.direccion.toLowerCase().includes(termino) ||
-      proyecto.central.toLowerCase().includes(termino);
+      (proyecto.activo || '').toLowerCase().includes(termino) ||
+      (proyecto.sisvadi || '').toLowerCase().includes(termino) ||
+      (proyecto.nombre_de_calle || '').toLowerCase().includes(termino) ||
+      (proyecto.nro || '').toLowerCase().includes(termino) ||
+      (proyecto.central || '').toLowerCase().includes(termino) ||
+      (proyecto.address_id || '').toLowerCase().includes(termino);
       
-    // 2. Filtro Ejecutado Por
-    const coincideEjecutado = filtroEjecutado === 'Todos' || proyecto.ejecutado_por === filtroEjecutado;
+    // Adaptación: el filtro "Todos" se mantiene, si elige una categoría visual, buscamos que const_of la contenga.
+    let coincideEjecutado = true;
+    if (filtroEjecutado !== 'Todos') {
+       coincideEjecutado = getCategoriaVisual(proyecto.const_of) === filtroEjecutado;
+    }
 
-    // 3. Filtro Fecha Conectado
     let coincideFecha = true;
     if (filtroFecha !== 'Todas') {
       const normalized = normalizeDateString(proyecto.fecha_conectado);
@@ -240,11 +249,7 @@ export default function ProyectosDashboard() {
         } else if (filtroFecha === 'EstaSemana') {
           coincideFecha = normalized >= startOfWeekStr && normalized <= endOfWeekStr;
         } else if (filtroFecha === 'Elegir') {
-          if (!fechaElegida) {
-            coincideFecha = false;
-          } else {
-            coincideFecha = normalized === fechaElegida;
-          }
+          coincideFecha = fechaElegida ? normalized === fechaElegida : false;
         }
       }
     }
@@ -252,15 +257,13 @@ export default function ProyectosDashboard() {
     return coincideBusqueda && coincideEjecutado && coincideFecha;
   });
 
-  // Indicadores calculados sobre el TOTAL (sin importar filtros) para dar contexto general
   const totalProyectos = proyectos.length;
-  const totalMantenimiento = proyectos.filter(p => p.ejecutado_por === 'Mantenimiento').length;
-  const totalObras = proyectos.filter(p => p.ejecutado_por === 'Obras').length;
-  const totalTeco = proyectos.filter(p => p.ejecutado_por === 'TECO').length;
+  const totalMantenimiento = proyectos.filter(p => getCategoriaVisual(p.const_of) === 'Mantenimiento').length;
+  const totalObras = proyectos.filter(p => getCategoriaVisual(p.const_of) === 'Obras').length;
+  const totalTeco = proyectos.filter(p => getCategoriaVisual(p.const_of) === 'TECO').length;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      {/* Header Elegante */}
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -282,12 +285,10 @@ export default function ProyectosDashboard() {
         </div>
       </header>
 
-      {/* Main Content Area */}
       <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
         
         {/* Tarjetas de Resumen */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-          {/* Card Total */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-slate-400 shadow-sm flex flex-col">
             <div className="flex items-center gap-3 mb-2">
               <div className="bg-slate-100 p-2 rounded-lg text-slate-600">
@@ -295,11 +296,8 @@ export default function ProyectosDashboard() {
               </div>
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total</h3>
             </div>
-            <div className="text-3xl font-extrabold text-slate-800">
-              {cargando ? '-' : totalProyectos}
-            </div>
+            <div className="text-3xl font-extrabold text-slate-800">{cargando ? '-' : totalProyectos}</div>
           </div>
-          {/* Card Mantenimiento */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-emerald-500 shadow-sm flex flex-col">
             <div className="flex items-center gap-3 mb-2">
               <div className="bg-emerald-100 p-2 rounded-lg text-emerald-700">
@@ -307,11 +305,8 @@ export default function ProyectosDashboard() {
               </div>
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mantenimiento</h3>
             </div>
-            <div className="text-3xl font-extrabold text-slate-800">
-              {cargando ? '-' : totalMantenimiento}
-            </div>
+            <div className="text-3xl font-extrabold text-slate-800">{cargando ? '-' : totalMantenimiento}</div>
           </div>
-          {/* Card Obras */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-blue-500 shadow-sm flex flex-col">
             <div className="flex items-center gap-3 mb-2">
               <div className="bg-blue-100 p-2 rounded-lg text-blue-700">
@@ -319,11 +314,8 @@ export default function ProyectosDashboard() {
               </div>
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Obras</h3>
             </div>
-            <div className="text-3xl font-extrabold text-slate-800">
-              {cargando ? '-' : totalObras}
-            </div>
+            <div className="text-3xl font-extrabold text-slate-800">{cargando ? '-' : totalObras}</div>
           </div>
-          {/* Card TECO */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-purple-500 shadow-sm flex flex-col">
             <div className="flex items-center gap-3 mb-2">
               <div className="bg-purple-100 p-2 rounded-lg text-purple-700">
@@ -331,16 +323,12 @@ export default function ProyectosDashboard() {
               </div>
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">TECO</h3>
             </div>
-            <div className="text-3xl font-extrabold text-slate-800">
-              {cargando ? '-' : totalTeco}
-            </div>
+            <div className="text-3xl font-extrabold text-slate-800">{cargando ? '-' : totalTeco}</div>
           </div>
         </section>
 
-        {/* Búsqueda, Filtros y Tablero Principal */}
+        {/* Zona Integrada de Búsqueda y Filtros */}
         <section className="flex flex-col gap-4">
-          
-          {/* Zona Integrada de Búsqueda y Filtros */}
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
@@ -349,7 +337,7 @@ export default function ProyectosDashboard() {
                 </div>
                 <input
                   type="text"
-                  placeholder="Buscar por SIGEST, título, dirección o central..."
+                  placeholder="Buscar por Activo, SISVADI, dirección o central..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="block w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-slate-50 text-slate-900 transition-colors"
@@ -372,7 +360,6 @@ export default function ProyectosDashboard() {
               </div>
             </div>
 
-            {/* Filtro Rápido Fecha Conectado */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-4 border-t border-slate-100">
               <span className="text-sm font-semibold text-slate-700">Fecha conectado:</span>
               <div className="flex flex-wrap items-center gap-2">
@@ -419,154 +406,140 @@ export default function ProyectosDashboard() {
             </h2>
           </div>
 
+          {/* Listado 2 niveles */}
           {cargando ? (
             <div className="flex flex-col items-center justify-center py-20 text-emerald-600 bg-white rounded-2xl border border-slate-200 shadow-sm">
               <Loader2 className="h-10 w-10 animate-spin mb-4 text-emerald-500" />
               <p className="text-slate-500 font-medium">Cargando proyectos...</p>
             </div>
-          ) : (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="overflow-x-auto">
-                {proyectos.length === 0 ? (
-                  <div className="text-center py-20 px-4">
-                    <div className="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-5 border border-slate-100">
-                      <FolderKanban className="h-8 w-8 text-slate-300" />
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-800 mb-2">No hay proyectos cargados todavía</h3>
-                    <p className="text-slate-500 max-w-sm mx-auto mb-8 text-sm">
-                      Creá el primer proyecto para comenzar a realizar el seguimiento de manera centralizada.
-                    </p>
-                    <button
-                      onClick={handleOpenNuevo}
-                      className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-semibold shadow-sm hover:bg-emerald-700 active:scale-95 transition-all"
-                    >
-                      <Plus className="h-5 w-5" />
-                      Nuevo proyecto
-                    </button>
-                  </div>
-                ) : proyectosFiltrados.length === 0 ? (
-                  <div className="text-center py-20 px-4">
-                    <div className="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-5 border border-slate-100">
-                      <Search className="h-8 w-8 text-slate-300" />
-                    </div>
-                    <h3 className="text-lg font-bold text-slate-800 mb-1">Sin resultados</h3>
-                    <p className="text-slate-500 text-sm">
-                      No se encontraron proyectos que coincidan con la búsqueda y filtros aplicados.
-                    </p>
-                  </div>
-                ) : (
-                  <table className="min-w-full divide-y divide-slate-200 text-left">
-                    <thead className="bg-slate-50/50">
-                      <tr>
-                        <th scope="col" className="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
-                          Proyecto / SIGEST
-                        </th>
-                        <th scope="col" className="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider min-w-[200px]">
-                          Título
-                        </th>
-                        <th scope="col" className="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
-                          Fecha Cita
-                        </th>
-                        <th scope="col" className="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
-                          Fecha Construido
-                        </th>
-                        <th scope="col" className="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
-                          Ejecutado Por
-                        </th>
-                        <th scope="col" className="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                          Dirección
-                        </th>
-                        <th scope="col" className="px-5 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                          Central
-                        </th>
-                        <th scope="col" className="px-4 py-4 relative">
-                          <span className="sr-only">Acciones</span>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-slate-100">
-                      {proyectosFiltrados.map((proyecto) => (
-                        <tr 
-                          key={proyecto.id} 
-                          className="hover:bg-slate-50/80 transition-colors duration-150 group"
-                        >
-                          <td className="px-5 py-4 whitespace-nowrap relative">
-                            <div className={`absolute left-0 top-0 bottom-0 w-1
-                              ${proyecto.ejecutado_por === 'Mantenimiento' ? 'bg-emerald-500' :
-                                proyecto.ejecutado_por === 'Obras' ? 'bg-blue-500' :
-                                'bg-purple-500'}`}
-                            ></div>
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-bold tracking-wide border border-slate-200 group-hover:border-slate-300 transition-colors">
-                              {proyecto.sigest}
-                            </span>
-                          </td>
-                          <td className="px-5 py-4">
-                            <div className="text-sm font-bold text-slate-900 leading-tight">
-                              {proyecto.titulo}
-                            </div>
-                          </td>
-                          <td className="px-5 py-4 whitespace-nowrap">
-                            <div className="text-sm text-slate-600 flex items-center gap-1.5 font-medium">
-                              <Calendar className="h-4 w-4 text-slate-400" />
-                              {proyecto.fecha_cita ? new Date(proyecto.fecha_cita + 'T00:00:00').toLocaleDateString() : '-'}
-                            </div>
-                          </td>
-                          <td className="px-5 py-4 whitespace-nowrap">
-                            <div className="text-sm text-slate-600 flex items-center gap-1.5 font-medium">
-                              <Calendar className="h-4 w-4 text-slate-400" />
-                              {proyecto.fecha_construido ? new Date(proyecto.fecha_construido + 'T00:00:00').toLocaleDateString() : '-'}
-                            </div>
-                          </td>
-                          <td className="px-5 py-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-sm
-                              ${proyecto.ejecutado_por === 'Mantenimiento' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 
-                                proyecto.ejecutado_por === 'Obras' ? 'bg-blue-100 text-blue-800 border-blue-300' : 
-                                'bg-purple-100 text-purple-800 border-purple-300'}`}
-                            >
-                              {proyecto.ejecutado_por === 'Mantenimiento' && <Hammer className="h-3.5 w-3.5" />}
-                              {proyecto.ejecutado_por === 'Obras' && <HardHat className="h-3.5 w-3.5" />}
-                              {proyecto.ejecutado_por === 'TECO' && <Zap className="h-3.5 w-3.5" />}
-                              {proyecto.ejecutado_por}
-                            </span>
-                          </td>
-                          <td className="px-5 py-4">
-                            <div className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
-                              <MapPin className="h-4 w-4 text-slate-400 shrink-0" />
-                              {proyecto.direccion}
-                            </div>
-                          </td>
-                          <td className="px-5 py-4 whitespace-nowrap">
-                            <div className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
-                              <Building2 className="h-4 w-4 text-slate-400 shrink-0" />
-                              {proyecto.central}
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-right">
-                            <button
-                              onClick={() => handleEdit(proyecto)}
-                              className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                              title="Editar proyecto"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+          ) : proyectos.length === 0 ? (
+            <div className="text-center py-20 px-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+              <div className="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-5 border border-slate-100">
+                <FolderKanban className="h-8 w-8 text-slate-300" />
               </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-2">No hay proyectos cargados todavía</h3>
+              <p className="text-slate-500 max-w-sm mx-auto mb-8 text-sm">
+                Creá el primer proyecto o importa tu archivo Excel para comenzar el seguimiento.
+              </p>
+              <button
+                onClick={handleOpenNuevo}
+                className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-semibold shadow-sm hover:bg-emerald-700 active:scale-95 transition-all"
+              >
+                <Plus className="h-5 w-5" />
+                Nuevo proyecto
+              </button>
+            </div>
+          ) : proyectosFiltrados.length === 0 ? (
+            <div className="text-center py-20 px-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+              <div className="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-5 border border-slate-100">
+                <Search className="h-8 w-8 text-slate-300" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-800 mb-1">Sin resultados</h3>
+              <p className="text-slate-500 text-sm">
+                No se encontraron proyectos que coincidan con la búsqueda y filtros aplicados.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+              {proyectosFiltrados.map((proyecto) => {
+                const categoria = getCategoriaVisual(proyecto.const_of);
+                const borderColor = 
+                  categoria === 'Mantenimiento' ? 'bg-emerald-500' :
+                  categoria === 'Obras' ? 'bg-blue-500' :
+                  categoria === 'TECO' ? 'bg-purple-500' : 'bg-slate-300';
+                  
+                const isConectado = (proyecto.estado || '').toUpperCase() === 'CONECTADO';
+
+                return (
+                  <div key={proyecto.id} className="relative p-5 border-b border-slate-100 hover:bg-slate-50 transition-colors flex flex-col gap-3 group">
+                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${borderColor}`}></div>
+                    
+                    {/* Nivel 1 */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5 pl-2">
+                      <div className="flex items-center gap-3">
+                        <span className="font-extrabold text-slate-900 text-lg tracking-tight">{proyecto.activo || 'S/N'}</span>
+                        <span className="text-sm font-semibold text-slate-600 flex items-center gap-1.5">
+                          <Building2 className="h-4 w-4 text-slate-400" />
+                          {proyecto.central}
+                        </span>
+                        <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">
+                          SISVADI {proyecto.sisvadi}
+                        </span>
+                      </div>
+                      
+                      <div className="flex-1"></div>
+                      
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Estado Máximo:</span>
+                          <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md border border-slate-200 shadow-sm">
+                            {proyecto.estado_maximo || 'N/A'}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Estado Actual:</span>
+                          <span className={`text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1.5 border shadow-sm
+                            ${isConectado ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-700 border-slate-200'}`}>
+                            {isConectado && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]"></span>}
+                            {proyecto.estado || 'N/A'}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={() => handleEdit(proyecto)}
+                          className="ml-1 p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          title="Editar proyecto"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Nivel 2 */}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pl-2 text-sm">
+                      <div className="flex items-center gap-1.5 font-bold text-slate-700">
+                        <MapPin className="h-4 w-4 text-emerald-500 shrink-0" />
+                        {proyecto.nombre_de_calle} {proyecto.nro}
+                      </div>
+
+                      <span className="text-slate-300 hidden sm:inline">|</span>
+
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
+                        <div 
+                          className="flex items-center gap-1 cursor-pointer group/tooltip relative" 
+                          onClick={() => copiarAlPortapapeles(proyecto.address_id || '')}
+                          title="Clic para copiar"
+                        >
+                          <span className="font-semibold text-slate-400">address_id:</span> 
+                          <span className="text-slate-600 hover:text-emerald-600 transition-colors flex items-center gap-1">
+                            {proyecto.address_id ? `${proyecto.address_id.substring(0, 8)}...` : '—'}
+                            <Copy className="h-3 w-3 opacity-0 group-hover/tooltip:opacity-100 transition-opacity" />
+                          </span>
+                        </div>
+                        
+                        <div><span className="font-semibold text-slate-400">const_of:</span> <span className="text-slate-600">{proyecto.const_of || '—'}</span></div>
+                        <div><span className="font-semibold text-slate-400">Polígono:</span> <span className="text-slate-600">{proyecto.poligono || '—'}</span></div>
+                        <div><span className="font-semibold text-slate-400">Fecha cita:</span> <span className="text-slate-600">{proyecto.fecha_cita ? new Date(proyecto.fecha_cita + 'T00:00:00').toLocaleDateString() : '—'}</span></div>
+                        <div><span className="font-semibold text-slate-400">Contrata:</span> <span className="text-slate-600">{proyecto.contrata || '—'}</span></div>
+                        <div><span className="font-semibold text-slate-400">Fecha conectado:</span> <span className="text-slate-600">{proyecto.fecha_conectado ? new Date(proyecto.fecha_conectado + 'T00:00:00').toLocaleDateString() : '—'}</span></div>
+                        <div><span className="font-semibold text-slate-400">a conectar:</span> <span className="text-slate-600">{proyecto.a_conectar || '—'}</span></div>
+                        <div><span className="font-semibold text-slate-400">C/SP:</span> <span className="text-slate-600">{proyecto.c_sp || '—'}</span></div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </section>
 
       </main>
 
-      {/* Modal / Formulario */}
+      {/* Modal / Formulario (Actualizado con nuevos campos) */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-200">
-            {/* Modal Header */}
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden my-8 animate-in zoom-in-95 duration-200">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <FolderKanban className="h-5 w-5 text-emerald-600" />
@@ -581,142 +554,82 @@ export default function ProyectosDashboard() {
               </button>
             </div>
 
-            {/* Modal Body / Form */}
             <form onSubmit={handleSubmit} className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 
-                {/* SIGEST */}
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Proyecto / SIGEST *
-                  </label>
-                  <input
-                    type="text"
-                    name="sigest"
-                    required
-                    value={formData.sigest}
-                    onChange={handleChange}
-                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 transition-colors"
-                  />
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Activo *</label>
+                  <input type="text" name="activo" required value={formData.activo} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">SISVADI *</label>
+                  <input type="text" name="sisvadi" required value={formData.sisvadi} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Central *</label>
+                  <input type="text" name="central" required value={formData.central} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
                 </div>
 
-                {/* Título */}
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Título del Proyecto *
-                  </label>
-                  <input
-                    type="text"
-                    name="titulo"
-                    required
-                    value={formData.titulo}
-                    onChange={handleChange}
-                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 transition-colors"
-                  />
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Nombre de Calle *</label>
+                  <input type="text" name="nombre_de_calle" required value={formData.nombre_de_calle} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Nro *</label>
+                  <input type="text" name="nro" required value={formData.nro} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Address ID</label>
+                  <input type="text" name="address_id" value={formData.address_id} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
                 </div>
 
-                {/* Ejecutado por */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Ejecutado por *
-                  </label>
-                  <select
-                    name="ejecutado_por"
-                    required
-                    value={formData.ejecutado_por}
-                    onChange={handleChange}
-                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 transition-colors font-medium cursor-pointer"
-                  >
-                    <option value="Mantenimiento">Mantenimiento</option>
-                    <option value="Obras">Obras</option>
-                    <option value="TECO">TECO</option>
-                  </select>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Estado Máximo *</label>
+                  <input type="text" name="estado_maximo" required value={formData.estado_maximo} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Estado Actual *</label>
+                  <input type="text" name="estado" required value={formData.estado} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Const Of</label>
+                  <input type="text" name="const_of" value={formData.const_of} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
                 </div>
 
-                {/* Fecha Cita */}
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Fecha de Cita *
-                  </label>
-                  <input
-                    type="date"
-                    name="fecha_cita"
-                    required
-                    value={formData.fecha_cita}
-                    onChange={handleChange}
-                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 transition-colors cursor-pointer"
-                  />
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Polígono</label>
+                  <input type="text" name="poligono" value={formData.poligono} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Contrata</label>
+                  <input type="text" name="contrata" value={formData.contrata} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">A conectar</label>
+                  <input type="text" name="a_conectar" value={formData.a_conectar} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
                 </div>
 
-                {/* Fecha Construido */}
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Fecha de Construido (Opcional)
-                  </label>
-                  <input
-                    type="date"
-                    name="fecha_construido"
-                    value={formData.fecha_construido}
-                    onChange={handleChange}
-                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 transition-colors cursor-pointer"
-                  />
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">C/SP</label>
+                  <input type="text" name="c_sp" value={formData.c_sp} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
                 </div>
-
-                {/* Central */}
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Central *
-                  </label>
-                  <input
-                    type="text"
-                    name="central"
-                    required
-                    value={formData.central}
-                    onChange={handleChange}
-                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 transition-colors"
-                  />
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Fecha Cita</label>
+                  <input type="date" name="fecha_cita" value={formData.fecha_cita} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
                 </div>
-
-                {/* Dirección */}
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Dirección *
-                  </label>
-                  <input
-                    type="text"
-                    name="direccion"
-                    required
-                    value={formData.direccion}
-                    onChange={handleChange}
-                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 transition-colors"
-                  />
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Fecha Conectado</label>
+                  <input type="date" name="fecha_conectado" value={formData.fecha_conectado} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
                 </div>
 
               </div>
 
-              {/* Modal Footer */}
               <div className="mt-8 pt-5 border-t border-slate-100 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  disabled={guardando}
-                  className="px-5 py-2.5 text-slate-600 font-bold rounded-lg hover:bg-slate-100 transition-colors"
-                >
+                <button type="button" onClick={handleCloseModal} disabled={guardando} className="px-5 py-2.5 text-slate-600 font-bold rounded-lg hover:bg-slate-100 transition-colors">
                   Cancelar
                 </button>
-                <button
-                  type="submit"
-                  disabled={guardando}
-                  className="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-lg shadow-sm hover:bg-emerald-700 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {guardando ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Guardando...
-                    </>
-                  ) : (
-                    proyectoEditando ? 'Actualizar Proyecto' : 'Guardar Proyecto'
-                  )}
+                <button type="submit" disabled={guardando} className="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-lg shadow-sm hover:bg-emerald-700 active:scale-95 transition-all disabled:opacity-70 flex items-center gap-2">
+                  {guardando ? <><Loader2 className="h-4 w-4 animate-spin" /> Guardando...</> : proyectoEditando ? 'Actualizar Proyecto' : 'Guardar Proyecto'}
                 </button>
               </div>
             </form>
