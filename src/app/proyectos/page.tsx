@@ -15,11 +15,39 @@ interface Proyecto {
   titulo: string;
   fecha_cita: string;
   fecha_construido: string | null;
+  fecha_conectado?: string | null;
   ejecutado_por: 'Mantenimiento' | 'Obras' | 'TECO';
   direccion: string;
   central: string;
   created_at: string;
 }
+
+// Helpers for robust date normalization
+const getLocalIsoString = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+const normalizeDateString = (dateStr: string | null | undefined): string | null => {
+  if (!dateStr) return null;
+  // If format DD/MM/YYYY or DD-MM-YYYY
+  const dmmyyyyMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if (dmmyyyyMatch) {
+    const [_, d, m, y] = dmmyyyyMatch;
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  }
+  // Try to parse standard ISO or JS date
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) {
+    if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+      return dateStr.substring(0, 10);
+    }
+    return getLocalIsoString(d);
+  }
+  return null;
+};
 
 export default function ProyectosDashboard() {
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
@@ -33,6 +61,10 @@ export default function ProyectosDashboard() {
   // Estados para búsqueda y filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroEjecutado, setFiltroEjecutado] = useState('Todos');
+  
+  // Nuevo estado para Fecha Conectado
+  const [filtroFecha, setFiltroFecha] = useState<'Todas' | 'Hoy' | 'Ayer' | 'EstaSemana' | 'Elegir'>('Todas');
+  const [fechaElegida, setFechaElegida] = useState<string>('');
 
   // Form state
   const [formData, setFormData] = useState({
@@ -164,8 +196,26 @@ export default function ProyectosDashboard() {
     }
   };
 
-  // Lógica de filtrado y búsqueda
+  // Variables para rango de fechas
+  const hoy = new Date();
+  const todayStr = getLocalIsoString(hoy);
+  
+  const ayer = new Date(hoy);
+  ayer.setDate(hoy.getDate() - 1);
+  const yesterdayStr = getLocalIsoString(ayer);
+  
+  const startOfWeek = new Date(hoy);
+  const dayOfWeek = startOfWeek.getDay();
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  startOfWeek.setDate(hoy.getDate() + diffToMonday);
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  const startOfWeekStr = getLocalIsoString(startOfWeek);
+  const endOfWeekStr = getLocalIsoString(endOfWeek);
+
+  // Lógica de filtrado
   const proyectosFiltrados = proyectos.filter(proyecto => {
+    // 1. Búsqueda por texto
     const termino = searchTerm.toLowerCase();
     const coincideBusqueda = 
       proyecto.sigest.toLowerCase().includes(termino) ||
@@ -173,9 +223,33 @@ export default function ProyectosDashboard() {
       proyecto.direccion.toLowerCase().includes(termino) ||
       proyecto.central.toLowerCase().includes(termino);
       
+    // 2. Filtro Ejecutado Por
     const coincideEjecutado = filtroEjecutado === 'Todos' || proyecto.ejecutado_por === filtroEjecutado;
 
-    return coincideBusqueda && coincideEjecutado;
+    // 3. Filtro Fecha Conectado
+    let coincideFecha = true;
+    if (filtroFecha !== 'Todas') {
+      const normalized = normalizeDateString(proyecto.fecha_conectado);
+      if (!normalized) {
+        coincideFecha = false;
+      } else {
+        if (filtroFecha === 'Hoy') {
+          coincideFecha = normalized === todayStr;
+        } else if (filtroFecha === 'Ayer') {
+          coincideFecha = normalized === yesterdayStr;
+        } else if (filtroFecha === 'EstaSemana') {
+          coincideFecha = normalized >= startOfWeekStr && normalized <= endOfWeekStr;
+        } else if (filtroFecha === 'Elegir') {
+          if (!fechaElegida) {
+            coincideFecha = false;
+          } else {
+            coincideFecha = normalized === fechaElegida;
+          }
+        }
+      }
+    }
+
+    return coincideBusqueda && coincideEjecutado && coincideFecha;
   });
 
   // Indicadores calculados sobre el TOTAL (sin importar filtros) para dar contexto general
@@ -266,35 +340,83 @@ export default function ProyectosDashboard() {
         {/* Búsqueda, Filtros y Tablero Principal */}
         <section className="flex flex-col gap-4">
           
-          {/* Barra de Búsqueda y Filtros */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-2">
-            <div className="relative flex-1">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-slate-400" />
+          {/* Zona Integrada de Búsqueda y Filtros */}
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Search className="h-5 w-5 text-slate-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Buscar por SIGEST, título, dirección o central..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="block w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-slate-50 text-slate-900 transition-colors"
+                />
               </div>
-              <input
-                type="text"
-                placeholder="Buscar por SIGEST, título, dirección o central..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm transition-colors"
-              />
-            </div>
-            <div className="relative sm:max-w-xs w-full">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                <Filter className="h-5 w-5 text-slate-400" />
+              <div className="relative sm:max-w-xs w-full">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Filter className="h-5 w-5 text-slate-400" />
+                </div>
+                <select
+                  value={filtroEjecutado}
+                  onChange={(e) => setFiltroEjecutado(e.target.value)}
+                  className="block w-full pl-10 pr-8 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-slate-50 text-slate-900 transition-colors cursor-pointer appearance-none"
+                >
+                  <option value="Todos">Todos los ejecutores</option>
+                  <option value="Mantenimiento">Mantenimiento</option>
+                  <option value="Obras">Obras</option>
+                  <option value="TECO">TECO</option>
+                </select>
               </div>
-              <select
-                value={filtroEjecutado}
-                onChange={(e) => setFiltroEjecutado(e.target.value)}
-                className="block w-full pl-10 pr-8 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm transition-colors cursor-pointer appearance-none"
-              >
-                <option value="Todos">Todos los ejecutores</option>
-                <option value="Mantenimiento">Mantenimiento</option>
-                <option value="Obras">Obras</option>
-                <option value="TECO">TECO</option>
-              </select>
             </div>
+
+            {/* Filtro Rápido Fecha Conectado */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 pt-4 border-t border-slate-100">
+              <span className="text-sm font-semibold text-slate-700">Fecha conectado:</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <button 
+                  onClick={() => setFiltroFecha('Todas')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors border ${filtroFecha === 'Todas' ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}`}
+                >Todas</button>
+                <button 
+                  onClick={() => setFiltroFecha('Hoy')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors border ${filtroFecha === 'Hoy' ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}`}
+                >Hoy</button>
+                <button 
+                  onClick={() => setFiltroFecha('Ayer')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors border ${filtroFecha === 'Ayer' ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}`}
+                >Ayer</button>
+                <button 
+                  onClick={() => setFiltroFecha('EstaSemana')}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors border ${filtroFecha === 'EstaSemana' ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}`}
+                >Esta semana</button>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setFiltroFecha('Elegir')}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors border flex items-center gap-1.5 ${filtroFecha === 'Elegir' ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}`}
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Elegir fecha
+                  </button>
+                  {filtroFecha === 'Elegir' && (
+                    <input 
+                      type="date"
+                      value={fechaElegida}
+                      onChange={(e) => setFechaElegida(e.target.value)}
+                      className="px-3 py-1 rounded-lg text-sm font-medium border border-slate-200 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-700 shadow-sm"
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between px-2 pt-2">
+            <h2 className="text-sm font-bold text-slate-700">
+              Proyectos cargados <span className="text-emerald-600 font-extrabold ml-2">[ {proyectosFiltrados.length} encontrado{proyectosFiltrados.length !== 1 ? 's' : ''} ]</span>
+            </h2>
           </div>
 
           {cargando ? (
@@ -329,7 +451,7 @@ export default function ProyectosDashboard() {
                     </div>
                     <h3 className="text-lg font-bold text-slate-800 mb-1">Sin resultados</h3>
                     <p className="text-slate-500 text-sm">
-                      No se encontraron proyectos que coincidan con la búsqueda.
+                      No se encontraron proyectos que coincidan con la búsqueda y filtros aplicados.
                     </p>
                   </div>
                 ) : (
