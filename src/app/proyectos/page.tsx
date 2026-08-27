@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -6,7 +6,8 @@ import { toast } from 'sonner';
 import { 
   Plus, X, Calendar, MapPin, 
   Building2, Loader2, FolderKanban,
-  FileText, Hammer, HardHat, Zap, Search, Filter, Pencil, Copy
+  FileText, Hammer, HardHat, Zap, Search, Filter, Pencil, Copy,
+  Upload, CheckCircle2, AlertTriangle, AlertCircle, Info
 } from 'lucide-react';
 
 interface Proyecto {
@@ -29,7 +30,6 @@ interface Proyecto {
   created_at?: string;
 }
 
-// Helpers for robust date normalization
 const getLocalIsoString = (d: Date) => {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -46,15 +46,46 @@ const normalizeDateString = (dateStr: string | null | undefined): string | null 
   }
   const d = new Date(dateStr);
   if (!isNaN(d.getTime())) {
-    if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
-      return dateStr.substring(0, 10);
-    }
+    if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) return dateStr.substring(0, 10);
     return getLocalIsoString(d);
   }
   return null;
 };
 
-// Helper to determine the visual category based on const_of
+const parseExcelDate = (val: string | null | undefined): string | null => {
+  if (!val) return null;
+  val = val.trim();
+  if (!val) return null;
+  
+  const matchDate = val.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if (matchDate) {
+     const d = matchDate[1].padStart(2, '0');
+     const m = matchDate[2].padStart(2, '0');
+     const y = matchDate[3];
+     return `${y}-${m}-${d}`;
+  }
+
+  const matchMonth = val.match(/^(\d{1,2})-(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)/i);
+  if (matchMonth) {
+     const d = matchMonth[1].padStart(2, '0');
+     const monthStr = matchMonth[2].toLowerCase();
+     const months: Record<string, string> = {
+       ene: '01', feb: '02', mar: '03', abr: '04', may: '05', jun: '06',
+       jul: '07', ago: '08', sep: '09', oct: '10', nov: '11', dic: '12'
+     };
+     const m = months[monthStr];
+     const y = new Date().getFullYear(); 
+     return `${y}-${m}-${d}`;
+  }
+  
+  const dObj = new Date(val);
+  if (!isNaN(dObj.getTime())) {
+     if (/^\d{4}-\d{2}-\d{2}/.test(val)) return val.substring(0, 10);
+     return dObj.toISOString().substring(0, 10);
+  }
+  return null;
+};
+
 const getCategoriaVisual = (const_of: string | null | undefined): 'Mantenimiento' | 'Obras' | 'TECO' | 'Otro' => {
   const upper = (const_of || '').toUpperCase();
   if (upper.includes('MANTENIMIENTO')) return 'Mantenimiento';
@@ -66,11 +97,21 @@ const getCategoriaVisual = (const_of: string | null | undefined): 'Mantenimiento
 export default function ProyectosDashboard() {
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [cargando, setCargando] = useState(true);
+  
+  // Nuevo Proyecto / Edit States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [guardando, setGuardando] = useState(false);
-  
   const [proyectoEditando, setProyectoEditando] = useState<Proyecto | null>(null);
 
+  // Carga Masiva States
+  const [isCargaMasivaOpen, setIsCargaMasivaOpen] = useState(false);
+  const [pastedData, setPastedData] = useState('');
+  const [cargaStep, setCargaStep] = useState<'input' | 'preview'>('input');
+  const [parsedProyectos, setParsedProyectos] = useState<any[]>([]);
+  const [cargaDuplicadosAccion, setCargaDuplicadosAccion] = useState<'omit' | 'update'>('omit');
+  const [cargaGuardando, setCargaGuardando] = useState(false);
+
+  // Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroEjecutado, setFiltroEjecutado] = useState('Todos');
   const [filtroFecha, setFiltroFecha] = useState<'Todas' | 'Hoy' | 'Ayer' | 'EstaSemana' | 'Elegir'>('Todas');
@@ -192,9 +233,147 @@ export default function ProyectosDashboard() {
       fetchProyectos();
     } catch (err: any) {
       console.error('Error guardando proyecto:', err);
-      toast.error('OcurriÃ³ un error al guardar el proyecto');
+      toast.error('Ocurrió un error al guardar el proyecto');
     } finally {
       setGuardando(false);
+    }
+  };
+
+  // --- Logica de Carga Masiva ---
+  const handleRevisarDatos = async () => {
+    if (!pastedData.trim()) {
+      toast.error('Copiá y pegá filas desde Excel primero.');
+      return;
+    }
+    
+    const rows = pastedData.split('\n').map(r => r.split('\t'));
+    
+    let startIndex = 0;
+    if (rows.length > 0 && rows[0].length > 0 && rows[0][0].toLowerCase().includes('activo')) {
+       startIndex = 1;
+    }
+    
+    const parsed = [];
+    const activosToQuery = [];
+    
+    for (let i = startIndex; i < rows.length; i++) {
+       const cols = rows[i];
+       if (cols.length === 1 && !cols[0].trim()) continue; 
+       
+       let status = 'valid';
+       let errorMsg = '';
+       
+       if (cols.length < 15) {
+          status = 'error';
+          errorMsg = `La fila tiene ${cols.length} columnas, se esperaban 15.`;
+       }
+       
+       const activo = cols[0]?.trim();
+       if (!activo && status !== 'error') {
+          status = 'error';
+          errorMsg = 'Falta el código de Activo.';
+       }
+       
+       if (status !== 'error') {
+          activosToQuery.push(activo);
+       }
+       
+       parsed.push({
+         _rowNum: i + 1,
+         _status: status,
+         _errorMsg: errorMsg,
+         activo,
+         address_id: cols[1]?.trim() || '',
+         central: cols[2]?.trim() || '',
+         sisvadi: cols[3]?.trim() || '',
+         estado_maximo: cols[4]?.trim() || '',
+         nombre_de_calle: cols[5]?.trim() || '',
+         nro: cols[6]?.trim() || '',
+         const_of: cols[7]?.trim() || '',
+         poligono: cols[8]?.trim() || '',
+         fecha_cita: parseExcelDate(cols[9]),
+         contrata: cols[10]?.trim() || '',
+         estado: cols[11]?.trim() || '',
+         fecha_conectado: parseExcelDate(cols[12]),
+         a_conectar: cols[13]?.trim() || '',
+         c_sp: cols[14]?.trim() || ''
+       });
+    }
+    
+    // Check duplicates
+    if (activosToQuery.length > 0) {
+       const { data, error } = await supabase.from('proyectos').select('activo').in('activo', activosToQuery);
+       if (data && !error) {
+          const existingSet = new Set(data.map(d => d.activo));
+          for (const p of parsed) {
+             if (p._status === 'valid' && existingSet.has(p.activo)) {
+                p._status = 'duplicate';
+             }
+          }
+       }
+    }
+    
+    setParsedProyectos(parsed);
+    setCargaStep('preview');
+  };
+
+  const handleConfirmarCarga = async () => {
+    setCargaGuardando(true);
+    try {
+      const toInsert = [];
+      const toUpdate = [];
+      
+      for (const p of parsedProyectos) {
+        if (p._status === 'error') continue;
+        if (p._status === 'duplicate' && cargaDuplicadosAccion === 'omit') continue;
+        
+        const payload = {
+          activo: p.activo,
+          address_id: p.address_id,
+          central: p.central,
+          sisvadi: p.sisvadi,
+          estado_maximo: p.estado_maximo,
+          nombre_de_calle: p.nombre_de_calle,
+          nro: p.nro,
+          const_of: p.const_of,
+          poligono: p.poligono,
+          fecha_cita: p.fecha_cita ? p.fecha_cita : null,
+          contrata: p.contrata,
+          estado: p.estado,
+          fecha_conectado: p.fecha_conectado ? p.fecha_conectado : null,
+          a_conectar: p.a_conectar,
+          c_sp: p.c_sp
+        };
+
+        if (p._status === 'duplicate') {
+          toUpdate.push(payload);
+        } else {
+          toInsert.push(payload);
+        }
+      }
+      
+      if (toInsert.length > 0) {
+        const { error } = await supabase.from('proyectos').insert(toInsert);
+        if (error) throw error;
+      }
+      
+      for (const up of toUpdate) {
+        const { error } = await supabase.from('proyectos').update(up).eq('activo', up.activo);
+        if (error) console.error("Error updating", up.activo, error);
+      }
+      
+      toast.success(`Se importaron correctamente ${toInsert.length + toUpdate.length} proyectos.`);
+      
+      setIsCargaMasivaOpen(false);
+      setPastedData('');
+      setCargaStep('input');
+      fetchProyectos();
+      
+    } catch (e) {
+      console.error(e);
+      toast.error("Ocurrió un error al importar los datos.");
+    } finally {
+      setCargaGuardando(false);
     }
   };
 
@@ -206,7 +385,6 @@ export default function ProyectosDashboard() {
   // Variables para rango de fechas
   const hoy = new Date();
   const todayStr = getLocalIsoString(hoy);
-  
   const ayer = new Date(hoy);
   ayer.setDate(hoy.getDate() - 1);
   const yesterdayStr = getLocalIsoString(ayer);
@@ -230,7 +408,6 @@ export default function ProyectosDashboard() {
       (proyecto.central || '').toLowerCase().includes(termino) ||
       (proyecto.address_id || '').toLowerCase().includes(termino);
       
-    // AdaptaciÃ³n: el filtro "Todos" se mantiene, si elige una categorÃ­a visual, buscamos que const_of la contenga.
     let coincideEjecutado = true;
     if (filtroEjecutado !== 'Todos') {
        coincideEjecutado = getCategoriaVisual(proyecto.const_of) === filtroEjecutado;
@@ -262,6 +439,11 @@ export default function ProyectosDashboard() {
   const totalObras = proyectos.filter(p => getCategoriaVisual(p.const_of) === 'Obras').length;
   const totalTeco = proyectos.filter(p => getCategoriaVisual(p.const_of) === 'TECO').length;
 
+  // Counters preview
+  const validCount = parsedProyectos.filter(p => p._status === 'valid').length;
+  const errorCount = parsedProyectos.filter(p => p._status === 'error').length;
+  const dupCount = parsedProyectos.filter(p => p._status === 'duplicate').length;
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       <header className="bg-white border-b border-slate-200">
@@ -272,16 +454,26 @@ export default function ProyectosDashboard() {
               Proyectos
             </h1>
             <p className="text-sm font-medium text-slate-500 mt-1">
-              Seguimiento y evoluciÃ³n de proyectos
+              Seguimiento y evolución de proyectos
             </p>
           </div>
-          <button
-            onClick={handleOpenNuevo}
-            className="bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-semibold shadow-sm shadow-emerald-600/20 hover:bg-emerald-700 active:scale-95 transition-all flex items-center gap-2 whitespace-nowrap"
-          >
-            <Plus className="h-5 w-5" />
-            Nuevo proyecto
-          </button>
+          
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => { setIsCargaMasivaOpen(true); setCargaStep('input'); setPastedData(''); }}
+              className="bg-white border border-slate-300 text-slate-700 px-5 py-2.5 rounded-lg font-semibold shadow-sm hover:bg-slate-50 active:scale-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+            >
+              <Upload className="h-5 w-5" />
+              ⇧ Carga de datos
+            </button>
+            <button
+              onClick={handleOpenNuevo}
+              className="bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-semibold shadow-sm shadow-emerald-600/20 hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+            >
+              <Plus className="h-5 w-5" />
+              Nuevo proyecto
+            </button>
+          </div>
         </div>
       </header>
 
@@ -327,7 +519,7 @@ export default function ProyectosDashboard() {
           </div>
         </section>
 
-        {/* Zona Integrada de BÃºsqueda y Filtros */}
+        {/* Zona Integrada de Búsqueda y Filtros */}
         <section className="flex flex-col gap-4">
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row gap-4">
@@ -337,7 +529,7 @@ export default function ProyectosDashboard() {
                 </div>
                 <input
                   type="text"
-                  placeholder="Buscar por Activo, SISVADI, direcciÃ³n o central..."
+                  placeholder="Buscar por Activo, SISVADI, dirección o central..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="block w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-slate-50 text-slate-900 transition-colors"
@@ -417,17 +609,26 @@ export default function ProyectosDashboard() {
               <div className="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-5 border border-slate-100">
                 <FolderKanban className="h-8 w-8 text-slate-300" />
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-2">No hay proyectos cargados todavÃ­a</h3>
+              <h3 className="text-xl font-bold text-slate-800 mb-2">No hay proyectos cargados todavía</h3>
               <p className="text-slate-500 max-w-sm mx-auto mb-8 text-sm">
-                CreÃ¡ el primer proyecto o importa tu archivo Excel para comenzar el seguimiento.
+                Creá el primer proyecto o importa tu archivo Excel para comenzar el seguimiento.
               </p>
-              <button
-                onClick={handleOpenNuevo}
-                className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-semibold shadow-sm hover:bg-emerald-700 active:scale-95 transition-all"
-              >
-                <Plus className="h-5 w-5" />
-                Nuevo proyecto
-              </button>
+              <div className="flex justify-center gap-3 mt-4">
+                <button
+                  onClick={() => setIsCargaMasivaOpen(true)}
+                  className="inline-flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-6 py-2.5 rounded-lg font-semibold shadow-sm hover:bg-slate-50 transition-all"
+                >
+                  <Upload className="h-5 w-5" />
+                  Carga masiva
+                </button>
+                <button
+                  onClick={handleOpenNuevo}
+                  className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-semibold shadow-sm hover:bg-emerald-700 active:scale-95 transition-all"
+                >
+                  <Plus className="h-5 w-5" />
+                  Nuevo proyecto
+                </button>
+              </div>
             </div>
           ) : proyectosFiltrados.length === 0 ? (
             <div className="text-center py-20 px-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
@@ -436,7 +637,7 @@ export default function ProyectosDashboard() {
               </div>
               <h3 className="text-lg font-bold text-slate-800 mb-1">Sin resultados</h3>
               <p className="text-slate-500 text-sm">
-                No se encontraron proyectos que coincidan con la bÃºsqueda y filtros aplicados.
+                No se encontraron proyectos que coincidan con la búsqueda y filtros aplicados.
               </p>
             </div>
           ) : (
@@ -471,7 +672,7 @@ export default function ProyectosDashboard() {
                       
                       <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Estado MÃ¡ximo:</span>
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Estado Máximo:</span>
                           <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md border border-slate-200 shadow-sm">
                             {proyecto.estado_maximo || 'N/A'}
                           </span>
@@ -513,18 +714,18 @@ export default function ProyectosDashboard() {
                         >
                           <span className="font-semibold text-slate-400">address_id:</span> 
                           <span className="text-slate-600 hover:text-emerald-600 transition-colors flex items-center gap-1">
-                            {proyecto.address_id ? `${proyecto.address_id.substring(0, 8)}...` : 'â€”'}
+                            {proyecto.address_id ? `${proyecto.address_id.substring(0, 8)}...` : '—'}
                             <Copy className="h-3 w-3 opacity-0 group-hover/tooltip:opacity-100 transition-opacity" />
                           </span>
                         </div>
                         
-                        <div><span className="font-semibold text-slate-400">const_of:</span> <span className="text-slate-600">{proyecto.const_of || 'â€”'}</span></div>
-                        <div><span className="font-semibold text-slate-400">PolÃ­gono:</span> <span className="text-slate-600">{proyecto.poligono || 'â€”'}</span></div>
-                        <div><span className="font-semibold text-slate-400">Fecha cita:</span> <span className="text-slate-600">{proyecto.fecha_cita ? new Date(proyecto.fecha_cita + 'T00:00:00').toLocaleDateString() : 'â€”'}</span></div>
-                        <div><span className="font-semibold text-slate-400">Contrata:</span> <span className="text-slate-600">{proyecto.contrata || 'â€”'}</span></div>
-                        <div><span className="font-semibold text-slate-400">Fecha conectado:</span> <span className="text-slate-600">{proyecto.fecha_conectado ? new Date(proyecto.fecha_conectado + 'T00:00:00').toLocaleDateString() : 'â€”'}</span></div>
-                        <div><span className="font-semibold text-slate-400">a conectar:</span> <span className="text-slate-600">{proyecto.a_conectar || 'â€”'}</span></div>
-                        <div><span className="font-semibold text-slate-400">C/SP:</span> <span className="text-slate-600">{proyecto.c_sp || 'â€”'}</span></div>
+                        <div><span className="font-semibold text-slate-400">const_of:</span> <span className="text-slate-600">{proyecto.const_of || '—'}</span></div>
+                        <div><span className="font-semibold text-slate-400">Polígono:</span> <span className="text-slate-600">{proyecto.poligono || '—'}</span></div>
+                        <div><span className="font-semibold text-slate-400">Fecha cita:</span> <span className="text-slate-600">{proyecto.fecha_cita ? new Date(proyecto.fecha_cita + 'T00:00:00').toLocaleDateString() : '—'}</span></div>
+                        <div><span className="font-semibold text-slate-400">Contrata:</span> <span className="text-slate-600">{proyecto.contrata || '—'}</span></div>
+                        <div><span className="font-semibold text-slate-400">Fecha conectado:</span> <span className="text-slate-600">{proyecto.fecha_conectado ? new Date(proyecto.fecha_conectado + 'T00:00:00').toLocaleDateString() : '—'}</span></div>
+                        <div><span className="font-semibold text-slate-400">a conectar:</span> <span className="text-slate-600">{proyecto.a_conectar || '—'}</span></div>
+                        <div><span className="font-semibold text-slate-400">C/SP:</span> <span className="text-slate-600">{proyecto.c_sp || '—'}</span></div>
                       </div>
                     </div>
                   </div>
@@ -536,7 +737,156 @@ export default function ProyectosDashboard() {
 
       </main>
 
-      {/* Modal / Formulario (Actualizado con nuevos campos) */}
+      {/* Modal Carga Masiva */}
+      {isCargaMasivaOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden my-8 animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Upload className="h-5 w-5 text-emerald-600" />
+                Carga masiva de proyectos
+              </h2>
+              <button 
+                onClick={() => { if(!cargaGuardando) setIsCargaMasivaOpen(false); }}
+                className="text-slate-400 hover:text-slate-700 hover:bg-slate-200 p-2 rounded-full transition-colors"
+                disabled={cargaGuardando}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {cargaStep === 'input' ? (
+                <div className="flex flex-col gap-4">
+                  <p className="text-sm font-medium text-slate-600">
+                    Copiá las filas directamente desde Excel y pegálas aquí.
+                  </p>
+                  
+                  <div className="bg-slate-50 rounded-xl border border-slate-200 p-1">
+                    <textarea 
+                      value={pastedData}
+                      onChange={(e) => setPastedData(e.target.value)}
+                      placeholder="Pegá aquí los datos copiados de Excel (Ctrl + V)..."
+                      className="w-full h-64 p-4 bg-transparent outline-none resize-y font-mono text-sm text-slate-700 whitespace-pre"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-xs text-slate-500 bg-blue-50 text-blue-800 p-3 rounded-lg">
+                    <Info className="h-4 w-4 shrink-0" />
+                    <p>Las columnas esperadas son 15 en este orden exacto: <strong>Activo, address_id, central, sisvadi, Estado Maximo, Nombre_de_Calle, nro, const_of, poligono, Fecha de Cita, Contrata, Estado, Fecha CONECTADO, a conectar, C/SP</strong>.</p>
+                  </div>
+
+                  <div className="mt-4 flex justify-end gap-3">
+                    <button 
+                      type="button" 
+                      onClick={() => setIsCargaMasivaOpen(false)} 
+                      className="px-5 py-2.5 text-slate-600 font-bold rounded-lg hover:bg-slate-100 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={handleRevisarDatos} 
+                      className="px-6 py-2.5 bg-slate-800 text-white font-bold rounded-lg shadow-sm hover:bg-slate-900 transition-all flex items-center gap-2"
+                    >
+                      Revisar datos
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-6">
+                  <div className="flex items-start sm:items-center justify-between flex-col sm:flex-row gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div>
+                      <h3 className="font-bold text-slate-800 text-base mb-1">Datos procesados</h3>
+                      <div className="flex items-center gap-4 text-sm">
+                        <span className="flex items-center gap-1.5 text-emerald-700 font-semibold">
+                          <CheckCircle2 className="h-4 w-4" /> {validCount} válidos
+                        </span>
+                        <span className="flex items-center gap-1.5 text-amber-600 font-semibold">
+                          <AlertTriangle className="h-4 w-4" /> {dupCount} duplicados
+                        </span>
+                        <span className="flex items-center gap-1.5 text-red-600 font-semibold">
+                          <AlertCircle className="h-4 w-4" /> {errorCount} con errores
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {dupCount > 0 && (
+                      <div className="bg-white p-3 rounded-lg border border-amber-200 shadow-sm">
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">Acción para duplicados:</label>
+                        <select 
+                          value={cargaDuplicadosAccion}
+                          onChange={(e) => setCargaDuplicadosAccion(e.target.value as any)}
+                          className="w-full text-sm font-semibold text-slate-700 border-none outline-none cursor-pointer bg-transparent"
+                        >
+                          <option value="omit">Omitir los duplicados</option>
+                          <option value="update">Actualizar registros existentes</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <div className="overflow-x-auto max-h-[40vh]">
+                      <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
+                        <thead className="bg-slate-100 sticky top-0 z-10">
+                          <tr>
+                            <th className="px-4 py-3 font-bold text-slate-600">Estado</th>
+                            <th className="px-4 py-3 font-bold text-slate-600">Activo</th>
+                            <th className="px-4 py-3 font-bold text-slate-600">Central</th>
+                            <th className="px-4 py-3 font-bold text-slate-600">SISVADI</th>
+                            <th className="px-4 py-3 font-bold text-slate-600">Estado Máximo</th>
+                            <th className="px-4 py-3 font-bold text-slate-600">Estado Actual</th>
+                            <th className="px-4 py-3 font-bold text-slate-600">Fecha CONECTADO</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-slate-100">
+                          {parsedProyectos.map((p, idx) => (
+                            <tr key={idx} className={p._status === 'error' ? 'bg-red-50/50' : p._status === 'duplicate' ? 'bg-amber-50/50' : 'hover:bg-slate-50'}>
+                              <td className="px-4 py-3 whitespace-nowrap">
+                                {p._status === 'valid' && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-800">Válido</span>}
+                                {p._status === 'duplicate' && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800" title="Activo ya existe">Duplicado</span>}
+                                {p._status === 'error' && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-800" title={p._errorMsg}>Error: Fila {p._rowNum}</span>}
+                              </td>
+                              <td className="px-4 py-3 font-bold text-slate-800">{p.activo || '-'}</td>
+                              <td className="px-4 py-3 text-slate-600">{p.central || '-'}</td>
+                              <td className="px-4 py-3 text-slate-600">{p.sisvadi || '-'}</td>
+                              <td className="px-4 py-3 text-slate-600">{p.estado_maximo || '-'}</td>
+                              <td className="px-4 py-3 text-slate-600">{p.estado || '-'}</td>
+                              <td className="px-4 py-3 text-slate-600">{p.fecha_conectado || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div className="mt-2 flex justify-between items-center border-t border-slate-100 pt-5">
+                    <button 
+                      type="button" 
+                      onClick={() => setCargaStep('input')} 
+                      disabled={cargaGuardando}
+                      className="px-5 py-2.5 text-slate-600 font-bold rounded-lg hover:bg-slate-100 transition-colors"
+                    >
+                      Volver
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={handleConfirmarCarga} 
+                      disabled={cargaGuardando || (validCount === 0 && (dupCount === 0 || cargaDuplicadosAccion === 'omit'))}
+                      className="px-6 py-2.5 bg-emerald-600 text-white font-bold rounded-lg shadow-sm hover:bg-emerald-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {cargaGuardando ? <><Loader2 className="h-4 w-4 animate-spin" /> Importando...</> : `Importar ${(validCount + (cargaDuplicadosAccion === 'update' ? dupCount : 0))} proyectos`}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal / Formulario Nuevo Proyecto */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden my-8 animate-in zoom-in-95 duration-200">
@@ -551,10 +901,13 @@ export default function ProyectosDashboard() {
                 disabled={guardando}
               >
                 <X className="h-5 w-5" />
-              </button></div><form onSubmit={handleSubmit} className="p-6">
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6">
               
-              {/* SecciÃ³n 1: IdentificaciÃ³n */}
-              <h3 className="text-sm font-bold text-emerald-700 mb-3 uppercase tracking-wide border-b border-emerald-100 pb-1">IdentificaciÃ³n del Proyecto</h3>
+              {/* Sección 1: Identificación */}
+              <h3 className="text-sm font-bold text-emerald-700 mb-3 uppercase tracking-wide border-b border-emerald-100 pb-1">Identificación del Proyecto</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Activo *</label>
@@ -570,11 +923,11 @@ export default function ProyectosDashboard() {
                 </div>
               </div>
 
-              {/* SecciÃ³n 2: Estado y PlanificaciÃ³n */}
-              <h3 className="text-sm font-bold text-emerald-700 mb-3 uppercase tracking-wide border-b border-emerald-100 pb-1">Estado y PlanificaciÃ³n</h3>
+              {/* Sección 2: Estado y Planificación */}
+              <h3 className="text-sm font-bold text-emerald-700 mb-3 uppercase tracking-wide border-b border-emerald-100 pb-1">Estado y Planificación</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Estado MÃ¡ximo *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Estado Máximo *</label>
                   <input type="text" name="estado_maximo" required value={formData.estado_maximo} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
                 </div>
                 <div>
@@ -591,8 +944,8 @@ export default function ProyectosDashboard() {
                 </div>
               </div>
 
-              {/* SecciÃ³n 3: UbicaciÃ³n */}
-              <h3 className="text-sm font-bold text-emerald-700 mb-3 uppercase tracking-wide border-b border-emerald-100 pb-1">UbicaciÃ³n GeogrÃ¡fica</h3>
+              {/* Sección 3: Ubicación */}
+              <h3 className="text-sm font-bold text-emerald-700 mb-3 uppercase tracking-wide border-b border-emerald-100 pb-1">Ubicación Geográfica</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Nombre de Calle *</label>
@@ -603,7 +956,7 @@ export default function ProyectosDashboard() {
                   <input type="text" name="nro" required value={formData.nro} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">PolÃ­gono</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Polígono</label>
                   <input type="text" name="poligono" value={formData.poligono} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
                 </div>
                 <div className="md:col-span-4">
@@ -612,7 +965,7 @@ export default function ProyectosDashboard() {
                 </div>
               </div>
 
-              {/* SecciÃ³n 4: Datos Operativos */}
+              {/* Sección 4: Datos Operativos */}
               <h3 className="text-sm font-bold text-emerald-700 mb-3 uppercase tracking-wide border-b border-emerald-100 pb-1">Datos Operativos</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
                 <div>
