@@ -446,6 +446,26 @@ export default function ProyectosDashboard() {
   const topContratas = Object.entries(contrataStats)
     .sort((a, b) => b[1] - a[1]);
 
+  const palette = [
+    { border: 'border-l-emerald-500', bg: 'bg-emerald-100', text: 'text-emerald-700', bar: 'bg-emerald-500' },
+    { border: 'border-l-blue-500', bg: 'bg-blue-100', text: 'text-blue-700', bar: 'bg-blue-500' },
+    { border: 'border-l-purple-500', bg: 'bg-purple-100', text: 'text-purple-700', bar: 'bg-purple-500' },
+    { border: 'border-l-amber-500', bg: 'bg-amber-100', text: 'text-amber-700', bar: 'bg-amber-500' },
+    { border: 'border-l-rose-500', bg: 'bg-rose-100', text: 'text-rose-700', bar: 'bg-rose-500' },
+    { border: 'border-l-cyan-500', bg: 'bg-cyan-100', text: 'text-cyan-700', bar: 'bg-cyan-500' }
+  ];
+
+  const contrataColorMap: Record<string, any> = {};
+  let colorIndex = 0;
+  topContratas.forEach(([name]) => {
+    if (name === 'Sin asignar') {
+      contrataColorMap[name] = { border: 'border-l-slate-300', bg: 'bg-slate-100', text: 'text-slate-600', bar: 'bg-slate-400' };
+    } else {
+      contrataColorMap[name] = palette[colorIndex % palette.length];
+      colorIndex++;
+    }
+  });
+
   // Counters preview
   const validCount = parsedProyectos.filter(p => p._status === 'valid').length;
   const errorCount = parsedProyectos.filter(p => p._status === 'error').length;
@@ -498,19 +518,8 @@ export default function ProyectosDashboard() {
             <div className="text-3xl font-extrabold text-slate-800">{cargando ? '-' : totalProyectos}</div>
           </div>
           
-          {topContratas.map(([contrataName, count], index) => {
-            const colors = [
-              { border: 'border-l-emerald-500', bg: 'bg-emerald-100', text: 'text-emerald-700' },
-              { border: 'border-l-blue-500', bg: 'bg-blue-100', text: 'text-blue-700' },
-              { border: 'border-l-purple-500', bg: 'bg-purple-100', text: 'text-purple-700' },
-              { border: 'border-l-amber-500', bg: 'bg-amber-100', text: 'text-amber-700' },
-              { border: 'border-l-rose-500', bg: 'bg-rose-100', text: 'text-rose-700' },
-              { border: 'border-l-cyan-500', bg: 'bg-cyan-100', text: 'text-cyan-700' }
-            ];
-            
-            const color = contrataName === 'Sin asignar' 
-              ? { border: 'border-l-slate-300', bg: 'bg-slate-100', text: 'text-slate-600' }
-              : colors[index % colors.length];
+          {topContratas.map(([contrataName, count]) => {
+            const color = contrataColorMap[contrataName];
 
             return (
               <div key={contrataName} className={`bg-white p-5 rounded-2xl border border-slate-200 border-l-4 ${color.border} shadow-sm flex flex-col`}>
@@ -652,11 +661,9 @@ export default function ProyectosDashboard() {
           ) : (
             <div className="flex flex-col gap-3">
               {proyectosFiltrados.map((proyecto) => {
-                const categoria = getCategoriaVisual(proyecto.const_of);
-                const borderColor = 
-                  categoria === 'Mantenimiento' ? 'bg-emerald-500' :
-                  categoria === 'Obras' ? 'bg-blue-500' :
-                  categoria === 'TECO' ? 'bg-purple-500' : 'bg-slate-400';
+                const contrataName = proyecto.contrata?.trim() || 'Sin asignar';
+                const colorData = contrataColorMap[contrataName] || { bar: 'bg-slate-400' };
+                const borderColor = colorData.bar;
                   
                 const isConectado = (proyecto.estado || '').toUpperCase() === 'CONECTADO';
 
