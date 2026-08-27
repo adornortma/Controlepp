@@ -114,6 +114,7 @@ export default function ProyectosDashboard() {
   // Filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroEjecutado, setFiltroEjecutado] = useState('Todos');
+  const [filtroContrata, setFiltroContrata] = useState('Todas');
   const [filtroFecha, setFiltroFecha] = useState<'Todas' | 'Hoy' | 'Ayer' | 'EstaSemana' | 'Elegir'>('Todas');
   const [fechaElegida, setFechaElegida] = useState<string>('');
 
@@ -413,6 +414,12 @@ export default function ProyectosDashboard() {
        coincideEjecutado = getCategoriaVisual(proyecto.const_of) === filtroEjecutado;
     }
 
+    let coincideContrata = true;
+    if (filtroContrata !== 'Todas') {
+      const pContrata = proyecto.contrata?.trim() || 'Sin asignar';
+      coincideContrata = pContrata === filtroContrata;
+    }
+
     let coincideFecha = true;
     if (filtroFecha !== 'Todas') {
       const normalized = normalizeDateString(proyecto.fecha_conectado);
@@ -431,7 +438,7 @@ export default function ProyectosDashboard() {
       }
     }
 
-    return coincideBusqueda && coincideEjecutado && coincideFecha;
+    return coincideBusqueda && coincideEjecutado && coincideContrata && coincideFecha;
   });
 
   const totalProyectos = proyectos.length;
@@ -540,7 +547,7 @@ export default function ProyectosDashboard() {
         {/* Zona Integrada de Búsqueda y Filtros */}
         <section className="flex flex-col gap-4">
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col lg:flex-row gap-4">
               <div className="relative flex-1">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                   <Search className="h-5 w-5 text-slate-400" />
@@ -553,20 +560,39 @@ export default function ProyectosDashboard() {
                   className="block w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-slate-50 text-slate-900 transition-colors"
                 />
               </div>
-              <div className="relative sm:max-w-xs w-full">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Filter className="h-5 w-5 text-slate-400" />
+              
+              <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                <div className="relative sm:w-[220px] w-full">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <Filter className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <select
+                    value={filtroEjecutado}
+                    onChange={(e) => setFiltroEjecutado(e.target.value)}
+                    className="block w-full pl-10 pr-8 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-slate-50 text-slate-900 transition-colors cursor-pointer appearance-none truncate"
+                  >
+                    <option value="Todos">Todos los ejecutores</option>
+                    <option value="Mantenimiento">Mantenimiento</option>
+                    <option value="Obras">Obras</option>
+                    <option value="TECO">TECO</option>
+                  </select>
                 </div>
-                <select
-                  value={filtroEjecutado}
-                  onChange={(e) => setFiltroEjecutado(e.target.value)}
-                  className="block w-full pl-10 pr-8 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-slate-50 text-slate-900 transition-colors cursor-pointer appearance-none"
-                >
-                  <option value="Todos">Todos los ejecutores</option>
-                  <option value="Mantenimiento">Mantenimiento</option>
-                  <option value="Obras">Obras</option>
-                  <option value="TECO">TECO</option>
-                </select>
+                
+                <div className="relative sm:w-[220px] w-full">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <Building2 className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <select
+                    value={filtroContrata}
+                    onChange={(e) => setFiltroContrata(e.target.value)}
+                    className="block w-full pl-10 pr-8 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-slate-50 text-slate-900 transition-colors cursor-pointer appearance-none truncate"
+                  >
+                    <option value="Todas">Todas las contratas</option>
+                    {topContratas.map(([name]) => (
+                      <option key={name} value={name}>{name}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
