@@ -641,29 +641,30 @@ export default function ProyectosDashboard() {
               </p>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+            <div className="flex flex-col gap-3">
               {proyectosFiltrados.map((proyecto) => {
                 const categoria = getCategoriaVisual(proyecto.const_of);
                 const borderColor = 
                   categoria === 'Mantenimiento' ? 'bg-emerald-500' :
                   categoria === 'Obras' ? 'bg-blue-500' :
-                  categoria === 'TECO' ? 'bg-purple-500' : 'bg-slate-300';
+                  categoria === 'TECO' ? 'bg-purple-500' : 'bg-slate-400';
                   
                 const isConectado = (proyecto.estado || '').toUpperCase() === 'CONECTADO';
 
                 return (
-                  <div key={proyecto.id} className="relative p-5 border-b border-slate-100 hover:bg-slate-50 transition-colors flex flex-col gap-3 group">
-                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${borderColor}`}></div>
+                  <div key={proyecto.id} className="relative p-4 sm:p-5 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-slate-300 transition-all flex flex-col gap-3.5 group">
+                    {/* Borde izquierdo redondeado */}
+                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl ${borderColor} opacity-90 group-hover:opacity-100 transition-opacity`}></div>
                     
-                    {/* Nivel 1 */}
+                    {/* Nivel 1: Identificación y Estado */}
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5 pl-2">
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <span className="font-extrabold text-slate-900 text-lg tracking-tight">{proyecto.activo || 'S/N'}</span>
-                        <span className="text-sm font-semibold text-slate-600 flex items-center gap-1.5">
-                          <Building2 className="h-4 w-4 text-slate-400" />
+                        <span className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                          <Building2 className="h-4 w-4 text-slate-500" />
                           {proyecto.central}
                         </span>
-                        <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">
+                        <span className="text-xs font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
                           SISVADI {proyecto.sisvadi}
                         </span>
                       </div>
@@ -672,16 +673,16 @@ export default function ProyectosDashboard() {
                       
                       <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Estado Máximo:</span>
-                          <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md border border-slate-200 shadow-sm">
+                          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Estado Máximo:</span>
+                          <span className="text-xs font-bold bg-slate-100 text-slate-800 px-2.5 py-1 rounded-md border border-slate-200 shadow-sm">
                             {proyecto.estado_maximo || 'N/A'}
                           </span>
                         </div>
                         
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Estado Actual:</span>
+                          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Estado Actual:</span>
                           <span className={`text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1.5 border shadow-sm
-                            ${isConectado ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-700 border-slate-200'}`}>
+                            ${isConectado ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-slate-50 text-slate-800 border-slate-200'}`}>
                             {isConectado && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.5)]"></span>}
                             {proyecto.estado || 'N/A'}
                           </span>
@@ -689,7 +690,7 @@ export default function ProyectosDashboard() {
 
                         <button
                           onClick={() => handleEdit(proyecto)}
-                          className="ml-1 p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          className="ml-1 p-1.5 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                           title="Editar proyecto"
                         >
                           <Pencil className="h-4 w-4" />
@@ -697,35 +698,44 @@ export default function ProyectosDashboard() {
                       </div>
                     </div>
 
-                    {/* Nivel 2 */}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pl-2 text-sm">
-                      <div className="flex items-center gap-1.5 font-bold text-slate-700">
-                        <MapPin className="h-4 w-4 text-emerald-500 shrink-0" />
+                    {/* Nivel 2: Ubicación y Operativa */}
+                    <div className="flex flex-col gap-3 pl-2">
+                      <div className="flex items-center gap-1.5 font-extrabold text-slate-800 text-sm">
+                        <MapPin className="h-4 w-4 text-emerald-600 shrink-0" />
                         {proyecto.nombre_de_calle} {proyecto.nro}
                       </div>
 
-                      <span className="text-slate-300 hidden sm:inline">|</span>
-
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
-                        <div 
-                          className="flex items-center gap-1 cursor-pointer group/tooltip relative" 
-                          onClick={() => copiarAlPortapapeles(proyecto.address_id || '')}
-                          title="Clic para copiar"
-                        >
-                          <span className="font-semibold text-slate-400">address_id:</span> 
-                          <span className="text-slate-600 hover:text-emerald-600 transition-colors flex items-center gap-1">
-                            {proyecto.address_id ? `${proyecto.address_id.substring(0, 8)}...` : '—'}
-                            <Copy className="h-3 w-3 opacity-0 group-hover/tooltip:opacity-100 transition-opacity" />
-                          </span>
-                        </div>
+                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
                         
-                        <div><span className="font-semibold text-slate-400">const_of:</span> <span className="text-slate-600">{proyecto.const_of || '—'}</span></div>
-                        <div><span className="font-semibold text-slate-400">Polígono:</span> <span className="text-slate-600">{proyecto.poligono || '—'}</span></div>
-                        <div><span className="font-semibold text-slate-400">Fecha cita:</span> <span className="text-slate-600">{proyecto.fecha_cita ? new Date(proyecto.fecha_cita + 'T00:00:00').toLocaleDateString() : '—'}</span></div>
-                        <div><span className="font-semibold text-slate-400">Contrata:</span> <span className="text-slate-600">{proyecto.contrata || '—'}</span></div>
-                        <div><span className="font-semibold text-slate-400">Fecha conectado:</span> <span className="text-slate-600">{proyecto.fecha_conectado ? new Date(proyecto.fecha_conectado + 'T00:00:00').toLocaleDateString() : '—'}</span></div>
-                        <div><span className="font-semibold text-slate-400">a conectar:</span> <span className="text-slate-600">{proyecto.a_conectar || '—'}</span></div>
-                        <div><span className="font-semibold text-slate-400">C/SP:</span> <span className="text-slate-600">{proyecto.c_sp || '—'}</span></div>
+                        {/* Grupo Técnico */}
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                          <div 
+                            className="flex items-center gap-1.5 cursor-pointer group/tooltip relative" 
+                            onClick={() => copiarAlPortapapeles(proyecto.address_id || '')}
+                            title="Clic para copiar"
+                          >
+                            <span className="font-semibold text-slate-500">address_id:</span> 
+                            <span className="font-bold text-slate-800 hover:text-emerald-700 transition-colors flex items-center gap-1">
+                              {proyecto.address_id ? `${proyecto.address_id.substring(0, 8)}...` : '—'}
+                              <Copy className="h-3 w-3 opacity-0 group-hover/tooltip:opacity-100 transition-opacity" />
+                            </span>
+                          </div>
+                          <div><span className="font-semibold text-slate-500">const_of:</span> <span className="font-bold text-slate-800">{proyecto.const_of || '—'}</span></div>
+                          <div><span className="font-semibold text-slate-500">Polígono:</span> <span className="font-bold text-slate-800">{proyecto.poligono || '—'}</span></div>
+                        </div>
+
+                        {/* Separador Visual */}
+                        <div className="hidden sm:block w-px h-4 bg-slate-300"></div>
+
+                        {/* Grupo Seguimiento */}
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                          <div><span className="font-semibold text-slate-500">Fecha cita:</span> <span className="font-bold text-slate-800">{proyecto.fecha_cita ? new Date(proyecto.fecha_cita + 'T00:00:00').toLocaleDateString() : '—'}</span></div>
+                          <div><span className="font-semibold text-slate-500">Contrata:</span> <span className="font-bold text-slate-800">{proyecto.contrata || '—'}</span></div>
+                          <div><span className="font-semibold text-slate-500">Fecha conectado:</span> <span className="font-bold text-slate-800">{proyecto.fecha_conectado ? new Date(proyecto.fecha_conectado + 'T00:00:00').toLocaleDateString() : '—'}</span></div>
+                          <div><span className="font-semibold text-slate-500">a conectar:</span> <span className="font-bold text-slate-800">{proyecto.a_conectar || '—'}</span></div>
+                          <div><span className="font-semibold text-slate-500">C/SP:</span> <span className="font-bold text-slate-800">{proyecto.c_sp || '—'}</span></div>
+                        </div>
+
                       </div>
                     </div>
                   </div>
