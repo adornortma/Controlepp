@@ -435,9 +435,16 @@ export default function ProyectosDashboard() {
   });
 
   const totalProyectos = proyectos.length;
-  const totalMantenimiento = proyectos.filter(p => getCategoriaVisual(p.const_of) === 'Mantenimiento').length;
-  const totalObras = proyectos.filter(p => getCategoriaVisual(p.const_of) === 'Obras').length;
-  const totalTeco = proyectos.filter(p => getCategoriaVisual(p.const_of) === 'TECO').length;
+  
+  // Agrupar por contrata
+  const contrataStats = proyectos.reduce((acc, p) => {
+    const contrataName = p.contrata?.trim() || 'Sin asignar';
+    acc[contrataName] = (acc[contrataName] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const topContratas = Object.entries(contrataStats)
+    .sort((a, b) => b[1] - a[1]);
 
   // Counters preview
   const validCount = parsedProyectos.filter(p => p._status === 'valid').length;
@@ -479,8 +486,8 @@ export default function ProyectosDashboard() {
 
       <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
         
-        {/* Tarjetas de Resumen */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+        {/* Tarjetas de Resumen Dinámicas por Contrata */}
+        <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
           <div className="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-slate-400 shadow-sm flex flex-col">
             <div className="flex items-center gap-3 mb-2">
               <div className="bg-slate-100 p-2 rounded-lg text-slate-600">
@@ -490,33 +497,35 @@ export default function ProyectosDashboard() {
             </div>
             <div className="text-3xl font-extrabold text-slate-800">{cargando ? '-' : totalProyectos}</div>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-emerald-500 shadow-sm flex flex-col">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="bg-emerald-100 p-2 rounded-lg text-emerald-700">
-                <Hammer className="h-5 w-5" />
+          
+          {topContratas.map(([contrataName, count], index) => {
+            const colors = [
+              { border: 'border-l-emerald-500', bg: 'bg-emerald-100', text: 'text-emerald-700' },
+              { border: 'border-l-blue-500', bg: 'bg-blue-100', text: 'text-blue-700' },
+              { border: 'border-l-purple-500', bg: 'bg-purple-100', text: 'text-purple-700' },
+              { border: 'border-l-amber-500', bg: 'bg-amber-100', text: 'text-amber-700' },
+              { border: 'border-l-rose-500', bg: 'bg-rose-100', text: 'text-rose-700' },
+              { border: 'border-l-cyan-500', bg: 'bg-cyan-100', text: 'text-cyan-700' }
+            ];
+            
+            const color = contrataName === 'Sin asignar' 
+              ? { border: 'border-l-slate-300', bg: 'bg-slate-100', text: 'text-slate-600' }
+              : colors[index % colors.length];
+
+            return (
+              <div key={contrataName} className={`bg-white p-5 rounded-2xl border border-slate-200 border-l-4 ${color.border} shadow-sm flex flex-col`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`${color.bg} p-2 rounded-lg ${color.text}`}>
+                    <HardHat className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider truncate" title={contrataName}>
+                    {contrataName}
+                  </h3>
+                </div>
+                <div className="text-3xl font-extrabold text-slate-800">{cargando ? '-' : count}</div>
               </div>
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mantenimiento</h3>
-            </div>
-            <div className="text-3xl font-extrabold text-slate-800">{cargando ? '-' : totalMantenimiento}</div>
-          </div>
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-blue-500 shadow-sm flex flex-col">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="bg-blue-100 p-2 rounded-lg text-blue-700">
-                <HardHat className="h-5 w-5" />
-              </div>
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Obras</h3>
-            </div>
-            <div className="text-3xl font-extrabold text-slate-800">{cargando ? '-' : totalObras}</div>
-          </div>
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 border-l-4 border-l-purple-500 shadow-sm flex flex-col">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="bg-purple-100 p-2 rounded-lg text-purple-700">
-                <Zap className="h-5 w-5" />
-              </div>
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">TECO</h3>
-            </div>
-            <div className="text-3xl font-extrabold text-slate-800">{cargando ? '-' : totalTeco}</div>
-          </div>
+            );
+          })}
         </section>
 
         {/* Zona Integrada de Búsqueda y Filtros */}
