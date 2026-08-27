@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -192,7 +192,7 @@ export default function ProyectosDashboard() {
       fetchProyectos();
     } catch (err: any) {
       console.error('Error guardando proyecto:', err);
-      toast.error('Ocurrió un error al guardar el proyecto');
+      toast.error('OcurriÃ³ un error al guardar el proyecto');
     } finally {
       setGuardando(false);
     }
@@ -230,7 +230,7 @@ export default function ProyectosDashboard() {
       (proyecto.central || '').toLowerCase().includes(termino) ||
       (proyecto.address_id || '').toLowerCase().includes(termino);
       
-    // Adaptación: el filtro "Todos" se mantiene, si elige una categoría visual, buscamos que const_of la contenga.
+    // AdaptaciÃ³n: el filtro "Todos" se mantiene, si elige una categorÃ­a visual, buscamos que const_of la contenga.
     let coincideEjecutado = true;
     if (filtroEjecutado !== 'Todos') {
        coincideEjecutado = getCategoriaVisual(proyecto.const_of) === filtroEjecutado;
@@ -272,7 +272,7 @@ export default function ProyectosDashboard() {
               Proyectos
             </h1>
             <p className="text-sm font-medium text-slate-500 mt-1">
-              Seguimiento y evolución de proyectos
+              Seguimiento y evoluciÃ³n de proyectos
             </p>
           </div>
           <button
@@ -327,7 +327,7 @@ export default function ProyectosDashboard() {
           </div>
         </section>
 
-        {/* Zona Integrada de Búsqueda y Filtros */}
+        {/* Zona Integrada de BÃºsqueda y Filtros */}
         <section className="flex flex-col gap-4">
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row gap-4">
@@ -337,7 +337,7 @@ export default function ProyectosDashboard() {
                 </div>
                 <input
                   type="text"
-                  placeholder="Buscar por Activo, SISVADI, dirección o central..."
+                  placeholder="Buscar por Activo, SISVADI, direcciÃ³n o central..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="block w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-slate-50 text-slate-900 transition-colors"
@@ -417,9 +417,9 @@ export default function ProyectosDashboard() {
               <div className="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-5 border border-slate-100">
                 <FolderKanban className="h-8 w-8 text-slate-300" />
               </div>
-              <h3 className="text-xl font-bold text-slate-800 mb-2">No hay proyectos cargados todavía</h3>
+              <h3 className="text-xl font-bold text-slate-800 mb-2">No hay proyectos cargados todavÃ­a</h3>
               <p className="text-slate-500 max-w-sm mx-auto mb-8 text-sm">
-                Creá el primer proyecto o importa tu archivo Excel para comenzar el seguimiento.
+                CreÃ¡ el primer proyecto o importa tu archivo Excel para comenzar el seguimiento.
               </p>
               <button
                 onClick={handleOpenNuevo}
@@ -436,7 +436,7 @@ export default function ProyectosDashboard() {
               </div>
               <h3 className="text-lg font-bold text-slate-800 mb-1">Sin resultados</h3>
               <p className="text-slate-500 text-sm">
-                No se encontraron proyectos que coincidan con la búsqueda y filtros aplicados.
+                No se encontraron proyectos que coincidan con la bÃºsqueda y filtros aplicados.
               </p>
             </div>
           ) : (
@@ -471,7 +471,7 @@ export default function ProyectosDashboard() {
                       
                       <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Estado Máximo:</span>
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Estado MÃ¡ximo:</span>
                           <span className="text-xs font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md border border-slate-200 shadow-sm">
                             {proyecto.estado_maximo || 'N/A'}
                           </span>
@@ -513,18 +513,18 @@ export default function ProyectosDashboard() {
                         >
                           <span className="font-semibold text-slate-400">address_id:</span> 
                           <span className="text-slate-600 hover:text-emerald-600 transition-colors flex items-center gap-1">
-                            {proyecto.address_id ? `${proyecto.address_id.substring(0, 8)}...` : '—'}
+                            {proyecto.address_id ? `${proyecto.address_id.substring(0, 8)}...` : 'â€”'}
                             <Copy className="h-3 w-3 opacity-0 group-hover/tooltip:opacity-100 transition-opacity" />
                           </span>
                         </div>
                         
-                        <div><span className="font-semibold text-slate-400">const_of:</span> <span className="text-slate-600">{proyecto.const_of || '—'}</span></div>
-                        <div><span className="font-semibold text-slate-400">Polígono:</span> <span className="text-slate-600">{proyecto.poligono || '—'}</span></div>
-                        <div><span className="font-semibold text-slate-400">Fecha cita:</span> <span className="text-slate-600">{proyecto.fecha_cita ? new Date(proyecto.fecha_cita + 'T00:00:00').toLocaleDateString() : '—'}</span></div>
-                        <div><span className="font-semibold text-slate-400">Contrata:</span> <span className="text-slate-600">{proyecto.contrata || '—'}</span></div>
-                        <div><span className="font-semibold text-slate-400">Fecha conectado:</span> <span className="text-slate-600">{proyecto.fecha_conectado ? new Date(proyecto.fecha_conectado + 'T00:00:00').toLocaleDateString() : '—'}</span></div>
-                        <div><span className="font-semibold text-slate-400">a conectar:</span> <span className="text-slate-600">{proyecto.a_conectar || '—'}</span></div>
-                        <div><span className="font-semibold text-slate-400">C/SP:</span> <span className="text-slate-600">{proyecto.c_sp || '—'}</span></div>
+                        <div><span className="font-semibold text-slate-400">const_of:</span> <span className="text-slate-600">{proyecto.const_of || 'â€”'}</span></div>
+                        <div><span className="font-semibold text-slate-400">PolÃ­gono:</span> <span className="text-slate-600">{proyecto.poligono || 'â€”'}</span></div>
+                        <div><span className="font-semibold text-slate-400">Fecha cita:</span> <span className="text-slate-600">{proyecto.fecha_cita ? new Date(proyecto.fecha_cita + 'T00:00:00').toLocaleDateString() : 'â€”'}</span></div>
+                        <div><span className="font-semibold text-slate-400">Contrata:</span> <span className="text-slate-600">{proyecto.contrata || 'â€”'}</span></div>
+                        <div><span className="font-semibold text-slate-400">Fecha conectado:</span> <span className="text-slate-600">{proyecto.fecha_conectado ? new Date(proyecto.fecha_conectado + 'T00:00:00').toLocaleDateString() : 'â€”'}</span></div>
+                        <div><span className="font-semibold text-slate-400">a conectar:</span> <span className="text-slate-600">{proyecto.a_conectar || 'â€”'}</span></div>
+                        <div><span className="font-semibold text-slate-400">C/SP:</span> <span className="text-slate-600">{proyecto.c_sp || 'â€”'}</span></div>
                       </div>
                     </div>
                   </div>
@@ -551,77 +551,86 @@ export default function ProyectosDashboard() {
                 disabled={guardando}
               >
                 <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                
+              </button></div><form onSubmit={handleSubmit} className="p-6">
+              
+              {/* SecciÃ³n 1: IdentificaciÃ³n */}
+              <h3 className="text-sm font-bold text-emerald-700 mb-3 uppercase tracking-wide border-b border-emerald-100 pb-1">IdentificaciÃ³n del Proyecto</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Activo *</label>
-                  <input type="text" name="activo" required value={formData.activo} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
+                  <input type="text" name="activo" required value={formData.activo} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">SISVADI *</label>
-                  <input type="text" name="sisvadi" required value={formData.sisvadi} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
+                  <input type="text" name="sisvadi" required value={formData.sisvadi} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Central *</label>
-                  <input type="text" name="central" required value={formData.central} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
+                  <input type="text" name="central" required value={formData.central} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
                 </div>
+              </div>
 
+              {/* SecciÃ³n 2: Estado y PlanificaciÃ³n */}
+              <h3 className="text-sm font-bold text-emerald-700 mb-3 uppercase tracking-wide border-b border-emerald-100 pb-1">Estado y PlanificaciÃ³n</h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Nombre de Calle *</label>
-                  <input type="text" name="nombre_de_calle" required value={formData.nombre_de_calle} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Nro *</label>
-                  <input type="text" name="nro" required value={formData.nro} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Address ID</label>
-                  <input type="text" name="address_id" value={formData.address_id} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Estado Máximo *</label>
-                  <input type="text" name="estado_maximo" required value={formData.estado_maximo} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Estado MÃ¡ximo *</label>
+                  <input type="text" name="estado_maximo" required value={formData.estado_maximo} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Estado Actual *</label>
-                  <input type="text" name="estado" required value={formData.estado} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Const Of</label>
-                  <input type="text" name="const_of" value={formData.const_of} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Polígono</label>
-                  <input type="text" name="poligono" value={formData.poligono} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Contrata</label>
-                  <input type="text" name="contrata" value={formData.contrata} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">A conectar</label>
-                  <input type="text" name="a_conectar" value={formData.a_conectar} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">C/SP</label>
-                  <input type="text" name="c_sp" value={formData.c_sp} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
+                  <input type="text" name="estado" required value={formData.estado} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Fecha Cita</label>
-                  <input type="date" name="fecha_cita" value={formData.fecha_cita} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
+                  <input type="date" name="fecha_cita" value={formData.fecha_cita} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Fecha Conectado</label>
-                  <input type="date" name="fecha_conectado" value={formData.fecha_conectado} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900" />
+                  <input type="date" name="fecha_conectado" value={formData.fecha_conectado} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
                 </div>
+              </div>
 
+              {/* SecciÃ³n 3: UbicaciÃ³n */}
+              <h3 className="text-sm font-bold text-emerald-700 mb-3 uppercase tracking-wide border-b border-emerald-100 pb-1">UbicaciÃ³n GeogrÃ¡fica</h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Nombre de Calle *</label>
+                  <input type="text" name="nombre_de_calle" required value={formData.nombre_de_calle} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Nro *</label>
+                  <input type="text" name="nro" required value={formData.nro} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">PolÃ­gono</label>
+                  <input type="text" name="poligono" value={formData.poligono} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
+                </div>
+                <div className="md:col-span-4">
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Address ID</label>
+                  <input type="text" name="address_id" value={formData.address_id} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
+                </div>
+              </div>
+
+              {/* SecciÃ³n 4: Datos Operativos */}
+              <h3 className="text-sm font-bold text-emerald-700 mb-3 uppercase tracking-wide border-b border-emerald-100 pb-1">Datos Operativos</h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Const Of</label>
+                  <input type="text" name="const_of" value={formData.const_of} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Contrata</label>
+                  <input type="text" name="contrata" value={formData.contrata} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">A conectar</label>
+                  <input type="text" name="a_conectar" value={formData.a_conectar} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">C/SP</label>
+                  <input type="text" name="c_sp" value={formData.c_sp} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white text-slate-900 shadow-sm" />
+                </div>
               </div>
 
               <div className="mt-8 pt-5 border-t border-slate-100 flex justify-end gap-3">
