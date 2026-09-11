@@ -107,14 +107,30 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
     setTecnicoSeleccionadoObj(tech);
   };
 
+  // Función para normalizar nombres de distrito (ej: "Lanús" -> "LANUS", "Monte Grande" -> "MONTE_GRANDE")
+  const normalizeDistrito = (str: string) =>
+    str
+      ? str
+          .toUpperCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/\s+/g, '_')
+      : '';
+
+  // Filtrar técnicos por el distrito asignado a la ruta (QR)
+  const tecnicosDelDistrito = tecnicos.filter((t) => {
+    if (!t.distrito) return false;
+    return normalizeDistrito(t.distrito) === normalizeDistrito(defaultDistrito);
+  });
+
   // Obtener células únicas del distrito de forma ordenada
   const celulas = Array.from(
-    new Set(tecnicos.map((t) => t.celula).filter(Boolean))
+    new Set(tecnicosDelDistrito.map((t) => t.celula).filter(Boolean))
   ) as string[];
   celulas.sort();
 
   // Filtrar técnicos por la célula seleccionada
-  const tecnicosFiltrados = tecnicos.filter((t) => t.celula === celulaSeleccionada);
+  const tecnicosFiltrados = tecnicosDelDistrito.filter((t) => t.celula === celulaSeleccionada);
   tecnicosFiltrados.sort((a, b) => a.nombre.localeCompare(b.nombre));
 
   // Título e instrucciones de cada paso
