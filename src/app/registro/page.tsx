@@ -606,11 +606,10 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
 
                     {!fotoCorrea ? (
                       <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
-                        <div className="bg-indigo-50 border border-indigo-100/50 rounded-xl p-4 flex gap-3 text-indigo-900">
-                          <CheckCircle2 className="h-5 w-5 shrink-0 text-indigo-600 mt-0.5" />
-                          <div className="text-xs leading-relaxed">
-                            <strong className="font-semibold block mb-0.5">Verificá la correa de sujeción:</strong>
-                            Asegurate de que se encuentre en buen estado y correctamente colocada en el poste, abrazándolo por completo.
+                        <div className="bg-indigo-50 border border-indigo-100/50 rounded-xl p-4 flex gap-3 text-indigo-900 items-center">
+                          <CheckCircle2 className="h-5 w-5 shrink-0 text-indigo-600" />
+                          <div className="text-sm font-medium leading-relaxed">
+                            Tomá una fotografía donde se vea claramente la correa de sujeción superior.
                           </div>
                         </div>
 
