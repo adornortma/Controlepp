@@ -47,7 +47,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
   const [tecnicos, setTecnicos] = useState<Tecnico[]>([]);
   const [cargandoTecnicos, setCargandoTecnicos] = useState(true);
 
-  // Estados de selecciÃ³n del tÃ©cnico (Paso 0)
+  // Estados de selección del técnico (Paso 0)
   const [celulaSeleccionada, setCelulaSeleccionada] = useState('');
   const [tecnicoSeleccionadoId, setTecnicoSeleccionadoId] = useState('');
   const [tecnicoSeleccionadoObj, setTecnicoSeleccionadoObj] = useState<Tecnico | null>(null);
@@ -68,7 +68,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeCaptureType, setActiveCaptureType] = useState<'advertencia' | 'numero_serie' | 'escalera' | 'correa' | null>(null);
 
-  // Cargar tÃ©cnicos activos del distrito correspondiente de Supabase
+  // Cargar técnicos activos del distrito correspondiente de Supabase
   useEffect(() => {
     const fetchTecnicos = async () => {
       setCargandoTecnicos(true);
@@ -92,7 +92,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
         setTecnicos(data || []);
       } catch (err) {
         console.error('Error fetching technicians:', err);
-        toast.error('Error al cargar la lista de tÃ©cnicos');
+        toast.error('Error al cargar la lista de técnicos');
       } finally {
         setCargandoTecnicos(false);
       }
@@ -101,46 +101,46 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
     fetchTecnicos();
   }, [defaultDistrito]);
 
-  // Manejar el cambio de tÃ©cnico seleccionado
+  // Manejar el cambio de técnico seleccionado
   const handleTecnicoChange = (id: string) => {
     setTecnicoSeleccionadoId(id);
     const tech = tecnicos.find((t) => t.id === id) || null;
     setTecnicoSeleccionadoObj(tech);
   };
 
-  // Obtener cÃ©lulas Ãºnicas del distrito de forma ordenada
+  // Obtener células únicas del distrito de forma ordenada
   const celulas = Array.from(
     new Set(tecnicos.map((t) => t.celula).filter(Boolean))
   ) as string[];
   celulas.sort();
 
-  // Filtrar tÃ©cnicos por la cÃ©lula seleccionada
+  // Filtrar técnicos por la célula seleccionada
   const tecnicosFiltrados = tecnicos.filter((t) => t.celula === celulaSeleccionada);
   tecnicosFiltrados.sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-  // TÃ­tulo e instrucciones de cada paso
-  const totalSteps = 6; // Formulario TÃ©cnico, Advertencia, Serie, Escalera, Obs, ConfirmaciÃ³n
+  // Título e instrucciones de cada paso
+  const totalSteps = 6; // Formulario Técnico, Advertencia, Serie, Escalera, Obs, Confirmación
   const stepProgress = Math.round(((step + 1) / totalSteps) * 100);
 
   const avanzar = () => {
     if (step === 0) {
       if (!tecnicoSeleccionadoObj) {
-        toast.error('Debe seleccionar su CÃ©lula y su Nombre');
+        toast.error('Debe seleccionar su Célula y su Nombre');
         return;
       }
     }
     if (step === 1) {
       if (FEATURE_FLAG_MOSTRAR_ADVERTENCIA && !fotoAdvertencia) {
-        toast.error('La fotografÃ­a de la advertencia es obligatoria');
+        toast.error('La fotografía de la advertencia es obligatoria');
         return;
       }
       if (!FEATURE_FLAG_MOSTRAR_ADVERTENCIA && !fotoCorrea) {
-        toast.error('La fotografÃ­a de la correa de sujeciÃ³n superior es obligatoria');
+        toast.error('La fotografía de la correa de sujeción superior es obligatoria');
         return;
       }
     }
     if (step === 2 && !fotoNumeroSerie) {
-      toast.error('La fotografÃ­a del nÃºmero de serie es obligatoria');
+      toast.error('La fotografía del número de serie es obligatoria');
       return;
     }
     // Paso 3 (Escalera) es ahora 100% opcional, por lo que no detenemos el avance
@@ -210,7 +210,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
       (!FEATURE_FLAG_MOSTRAR_ADVERTENCIA && !fotoCorrea) ||
       !fotoNumeroSerie
     ) {
-      toast.error('Faltan completar campos obligatorios o fotografÃ­as');
+      toast.error('Faltan completar campos obligatorios o fotografías');
       return;
     }
 
@@ -224,7 +224,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
       if (fotoNumeroSerie && base64ToBlob(fotoNumeroSerie).size < 1000) sizeCheck = false;
       
       if (!sizeCheck) {
-        throw new Error('Las imÃ¡genes obligatorias no son vÃ¡lidas o estÃ¡n daÃ±adas.');
+        throw new Error('Las imágenes obligatorias no son válidas o están dañadas.');
       }
 
       const liderNombre = tecnicoSeleccionadoObj.usuarios?.nombre || null;
@@ -299,7 +299,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
         if (dbFotoError) throw dbFotoError;
       }
 
-      // Ã‰xito completo
+      // Éxito completo
       confetti({
         particleCount: 150,
         spread: 70,
@@ -330,7 +330,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-slate-50 relative pb-24">
-      {/* Input oculto para gatillar la cÃ¡mara nativa del telÃ©fono */}
+      {/* Input oculto para gatillar la cámara nativa del teléfono */}
       <input
         type="file"
         accept="image/*"
@@ -343,8 +343,8 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
       {/* Header Fijo */}
       <header className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between z-30">
         <div>
-          <h1 className="font-bold text-slate-900 leading-tight">Cuidado y seÃ±alizaciÃ³n de escaleras</h1>
-          <p className="text-xs text-slate-500 font-medium">Formulario de ColocaciÃ³n de Calcos</p>
+          <h1 className="font-bold text-slate-900 leading-tight">Cuidado y señalización de escaleras</h1>
+          <p className="text-xs text-slate-500 font-medium">Formulario de Colocación de Calcos</p>
         </div>
         {profile?.rol === 'administrador' && (
           <button
@@ -370,26 +370,26 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
       {/* Contenido Principal */}
       <main className="flex-1 flex flex-col justify-center px-4 py-6 max-w-md mx-auto w-full">
         {guardadoExitoso ? (
-          /* Pantalla de Ã‰xito */
+          /* Pantalla de Éxito */
           <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl text-center flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-300">
             <div className="h-20 w-20 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center">
               <CheckCircle2 className="h-12 w-12 stroke-[2.5]" />
             </div>
             <div>
-              <h2 className="text-2xl font-extrabold text-slate-900">Â¡Registro Guardado!</h2>
+              <h2 className="text-2xl font-extrabold text-slate-900">¡Registro Guardado!</h2>
               <p className="text-slate-500 text-sm mt-2 px-2">
-                La evidencia fotogrÃ¡fica del calco y nÃºmero de serie ha sido registrada correctamente.
+                La evidencia fotográfica del calco y número de serie ha sido registrada correctamente.
               </p>
             </div>
 
             <div className="w-full border-t border-slate-100 pt-6 flex flex-col gap-3">
               <div className="bg-slate-50 rounded-xl p-4 text-left text-sm flex flex-col gap-2">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">TÃ©cnico:</span>
+                  <span className="text-slate-500">Técnico:</span>
                   <span className="font-semibold text-slate-950">{tecnicoSeleccionadoObj?.nombre}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">CÃ©lula:</span>
+                  <span className="text-slate-500">Célula:</span>
                   <span className="font-semibold text-slate-950">{celulaSeleccionada}</span>
                 </div>
                 <div className="flex justify-between">
@@ -402,7 +402,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
         ) : (
           /* Pasos del Formulario */
           <div className="flex flex-col flex-1">
-            {/* Paso 0: IdentificaciÃ³n del TÃ©cnico */}
+            {/* Paso 0: Identificación del Técnico */}
             {step === 0 && (
               <div className="flex flex-col gap-4 animate-in fade-in duration-200">
                 <div>
@@ -423,10 +423,10 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                     </div>
                   ) : (
                     <>
-                      {/* CÃ©lula */}
+                      {/* Célula */}
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                          <Building className="h-4 w-4 text-indigo-500" /> Â¿A quÃ© cÃ©lula pertenecÃ©s?
+                          <Building className="h-4 w-4 text-indigo-500" /> ¿A qué célula pertenecés?
                         </label>
                         <Select
                           value={celulaSeleccionada}
@@ -437,7 +437,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                           }}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Seleccionar cÃ©lula" />
+                            <SelectValue placeholder="Seleccionar célula" />
                           </SelectTrigger>
                           <SelectContent>
                             {celulas.map((c) => (
@@ -449,10 +449,10 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                         </Select>
                       </div>
 
-                      {/* TÃ©cnico */}
+                      {/* Técnico */}
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                          <User className="h-4 w-4 text-indigo-500" /> SeleccionÃ¡ tu nombre
+                          <User className="h-4 w-4 text-indigo-500" /> Seleccioná tu nombre
                         </label>
                         <Select
                           value={tecnicoSeleccionadoId}
@@ -460,7 +460,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                           disabled={!celulaSeleccionada}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder={celulaSeleccionada ? "Seleccionar tÃ©cnico" : "Selecciona primero una cÃ©lula"} />
+                            <SelectValue placeholder={celulaSeleccionada ? "Seleccionar técnico" : "Selecciona primero una célula"} />
                           </SelectTrigger>
                           <SelectContent>
                             {tecnicosFiltrados.map((t) => (
@@ -472,32 +472,32 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                         </Select>
                       </div>
 
-                      {/* Tarjeta de ConfirmaciÃ³n */}
+                      {/* Tarjeta de Confirmación */}
                       {tecnicoSeleccionadoObj && (
                         <div className="mt-2 p-5 bg-gradient-to-br from-indigo-50/50 to-indigo-100/10 border border-indigo-100 rounded-2xl flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 shadow-inner">
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl">
-                              ðŸ‘·
+                              👷
                             </div>
                             <div>
                               <h3 className="font-extrabold text-slate-900 text-base">{tecnicoSeleccionadoObj.nombre}</h3>
-                              <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">TÃ©cnico Asignado</p>
+                              <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">Técnico Asignado</p>
                             </div>
                           </div>
 
                           <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-2 border-t border-indigo-100/60 text-xs">
                             <div>
-                              <span className="text-slate-400 block font-semibold flex items-center gap-1">ðŸ“ Distrito</span>
+                              <span className="text-slate-400 block font-semibold flex items-center gap-1">📍 Distrito</span>
                               <span className="font-bold text-slate-800 text-sm mt-0.5 block">{defaultDistrito}</span>
                             </div>
                             <div>
-                              <span className="text-slate-400 block font-semibold flex items-center gap-1">ðŸ¢ CÃ©lula</span>
+                              <span className="text-slate-400 block font-semibold flex items-center gap-1">🏢 Célula</span>
                               <span className="font-bold text-slate-800 text-sm mt-0.5 block">{celulaSeleccionada}</span>
                             </div>
                             <div className="col-span-2">
-                              <span className="text-slate-400 block font-semibold flex items-center gap-1">ðŸ‘¨â€ðŸ’¼ LÃ­der</span>
+                              <span className="text-slate-400 block font-semibold flex items-center gap-1">👨‍💼 Líder</span>
                               <span className="font-bold text-slate-800 text-sm mt-0.5 block">
-                                {tecnicoSeleccionadoObj.usuarios?.nombre || 'Sin lÃ­der asignado'}
+                                {tecnicoSeleccionadoObj.usuarios?.nombre || 'Sin líder asignado'}
                               </span>
                             </div>
                           </div>
@@ -654,27 +654,28 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                 )}
               </div>
             )}
-            {/* Paso 2: NÃºmero de Serie */}
+
+            {/* Paso 2: Número de Serie */}
             {step === 2 && (
               <div className="flex flex-col gap-4 animate-in fade-in duration-200">
                 <div>
                   <span className="text-xs font-bold text-indigo-600 uppercase tracking-widest">
                     Paso 3 de 6
                   </span>
-                  <h2 className="text-2xl font-extrabold text-slate-900 mt-1">NÃºmero de Serie</h2>
+                  <h2 className="text-2xl font-extrabold text-slate-900 mt-1">Número de Serie</h2>
                   <p className="text-slate-500 text-sm mt-1">
-                    FotografÃ­a de la placa del fabricante.
+                    Fotografía de la placa del fabricante.
                   </p>
                 </div>
 
                 {!fotoNumeroSerie ? (
-                  /* GuÃ­a visual */
+                  /* Guía visual */
                   <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
                     <div className="bg-indigo-50 border border-indigo-100/50 rounded-xl p-4 flex gap-3 text-indigo-900">
                       <Binary className="h-5 w-5 shrink-0 text-indigo-600 mt-0.5" />
                       <div className="text-xs leading-relaxed">
-                        <strong className="font-semibold block mb-0.5">UbicaciÃ³n del NÂ° de Serie:</strong>
-                        Generalmente se encuentra en la etiqueta de caracterÃ­sticas del lateral interior del larguero.
+                        <strong className="font-semibold block mb-0.5">Ubicación del N° de Serie:</strong>
+                        Generalmente se encuentra en la etiqueta de características del lateral interior del larguero.
                       </div>
                     </div>
 
@@ -684,13 +685,13 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                       </h4>
                       <ul className="text-sm text-slate-600 flex flex-col gap-1.5">
                         <li className="flex items-center gap-2">
-                          <span className="text-emerald-500 font-bold text-base">âœ“</span> El nÃºmero debe ser completamente legible.
+                          <span className="text-emerald-500 font-bold text-base">✓</span> El número debe ser completamente legible.
                         </li>
                         <li className="flex items-center gap-2">
-                          <span className="text-emerald-500 font-bold text-base">âœ“</span> Sin reflejos ni destellos de flash directos.
+                          <span className="text-emerald-500 font-bold text-base">✓</span> Sin reflejos ni destellos de flash directos.
                         </li>
                         <li className="flex items-center gap-2">
-                          <span className="text-emerald-500 font-bold text-base">âœ“</span> Imagen completamente enfocada.
+                          <span className="text-emerald-500 font-bold text-base">✓</span> Imagen completamente enfocada.
                         </li>
                       </ul>
                     </div>
@@ -699,7 +700,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                     <div className="relative w-full rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center py-2">
                       <img
                         src="/ejemplo-serie.png"
-                        alt="Ejemplo placa nÃºmero de serie"
+                        alt="Ejemplo placa número de serie"
                         className="object-contain max-h-64 w-auto"
                       />
                       <span className="absolute bottom-2 right-2 bg-black/60 px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase tracking-wider">
@@ -711,16 +712,16 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                       onClick={() => triggerCapture('numero_serie')}
                       className="w-full mt-2 py-4 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-lg shadow-emerald-600/10 active:scale-98 transition flex items-center justify-center gap-2 text-base"
                     >
-                      <CameraIcon className="h-5 w-5" /> Tomar FotografÃ­a
+                      <CameraIcon className="h-5 w-5" /> Tomar Fotografía
                     </button>
                   </div>
                 ) : (
-                  /* Vista previa e ingreso del nÃºmero */
+                  /* Vista previa e ingreso del número */
                   <div className="flex flex-col gap-4">
                     <div className="relative w-full aspect-[3/4] bg-slate-900 rounded-2xl overflow-hidden shadow-md border border-slate-100">
                       <img
                         src={fotoNumeroSerie}
-                        alt="NÃºmero de Serie"
+                        alt="Número de Serie"
                         className="w-full h-full object-cover"
                       />
                       <button
@@ -733,7 +734,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
 
                     <div className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm flex flex-col gap-2">
                       <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                        Escriba el NÃºmero de Serie (Opcional):
+                        Escriba el Número de Serie (Opcional):
                       </label>
                       <input
                         type="text"
@@ -764,11 +765,11 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                 </div>
 
                 {!fotoEscalera ? (
-                  /* GuÃ­a visual */
+                  /* Guía visual */
                   <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
                     <div className="flex flex-col gap-2">
                       <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        RecomendaciÃ³n:
+                        Recomendación:
                       </h4>
                       <p className="text-sm text-slate-600">
                         Intente fotografiar la escalera en su totalidad a una distancia prudente de 2 metros.
@@ -780,7 +781,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                         onClick={() => triggerCapture('escalera')}
                         className="w-full py-4 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg active:scale-98 transition flex items-center justify-center gap-2 text-base"
                       >
-                        <CameraIcon className="h-5 w-5" /> Tomar FotografÃ­a
+                        <CameraIcon className="h-5 w-5" /> Tomar Fotografía
                       </button>
                     </div>
                   </div>
@@ -825,7 +826,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
 
                 <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex flex-col gap-3">
                   <div className="flex justify-between text-xs font-bold text-slate-400">
-                    <span>COMENTARIOS (MÃX. 500 CARACTERES)</span>
+                    <span>COMENTARIOS (MÁX. 500 CARACTERES)</span>
                     <span className={observaciones.length > 500 ? 'text-red-500' : ''}>
                       {observaciones.length}/500
                     </span>
@@ -842,7 +843,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
               </div>
             )}
 
-            {/* Paso 5: ConfirmaciÃ³n */}
+            {/* Paso 5: Confirmación */}
             {step === 5 && (
               <div className="flex flex-col gap-4 animate-in fade-in duration-200">
                 <div>
@@ -860,12 +861,12 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                   <div className="flex flex-col gap-3">
                     <div className="flex items-start justify-between pb-3 border-b border-slate-100">
                       <div>
-                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">TÃ©cnico</h4>
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Técnico</h4>
                         <p className="text-base font-bold text-slate-950 mt-0.5">
                           {tecnicoSeleccionadoObj?.nombre}
                         </p>
                         <p className="text-xs text-slate-500">
-                          CÃ©lula: {celulaSeleccionada}
+                          Célula: {celulaSeleccionada}
                         </p>
                       </div>
                       <div className="bg-indigo-50 px-2.5 py-1 rounded-lg text-xs font-bold text-indigo-700">
@@ -875,17 +876,17 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
 
                     <div className="flex justify-between py-1 text-sm border-b border-slate-50">
                       <span className="text-slate-500 flex items-center gap-1.5">
-                        <Binary className="h-4 w-4" /> NÂ° Serie:
+                        <Binary className="h-4 w-4" /> N° Serie:
                       </span>
                       <span className="font-mono font-bold text-slate-950">{numeroSerie || 'S/N'}</span>
                     </div>
 
                     <div className="flex justify-between py-1 text-sm border-b border-slate-50">
                       <span className="text-slate-500 flex items-center gap-1.5">
-                        <User className="h-4 w-4" /> LÃ­der a cargo:
+                        <User className="h-4 w-4" /> Líder a cargo:
                       </span>
                       <span className="font-semibold text-slate-950">
-                        {tecnicoSeleccionadoObj?.usuarios?.nombre || 'Sin lÃ­der asignado'}
+                        {tecnicoSeleccionadoObj?.usuarios?.nombre || 'Sin líder asignado'}
                       </span>
                     </div>
 
@@ -947,7 +948,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
         )}
       </main>
 
-      {/* Botones Fijos de Control (Solo si no estÃ¡ en Ã©xito ni en el paso 0 con tÃ©cnico confirmado) */}
+      {/* Botones Fijos de Control (Solo si no está en éxito ni en el paso 0 con técnico confirmado) */}
       {!guardadoExitoso && (
         <div className="fixed bottom-0 inset-x-0 bg-white border-t border-slate-100 p-4 max-w-md mx-auto w-full flex gap-3 z-30 shadow-lg">
           {step > 0 && (
@@ -990,4 +991,3 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
     </div>
   );
 }
-
