@@ -85,8 +85,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
               nombre
             )
           `)
-          .eq('activo', true)
-          .eq('distrito', defaultDistrito);
+          .eq('activo', true);
 
         if (error) throw error;
         setTecnicos(data || []);
@@ -99,7 +98,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
     };
 
     fetchTecnicos();
-  }, [defaultDistrito]);
+  }, []);
 
   // Manejar el cambio de técnico seleccionado
   const handleTecnicoChange = (id: string) => {
@@ -238,7 +237,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
           usuario_id: liderId,
           tecnico_nombre: tecnicoSeleccionadoObj.nombre,
           tecnico_legajo: tecnicoSeleccionadoObj.legajo,
-          distrito: defaultDistrito,
+          distrito: tecnicoSeleccionadoObj.distrito || 'Sin distrito',
           central: celulaSeleccionada,
           lider_nombre: liderNombre,
           numero_serie: numeroSerie.trim() || 'S/N',
@@ -392,10 +391,14 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                   <span className="text-slate-500">Célula:</span>
                   <span className="font-semibold text-slate-950">{celulaSeleccionada}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Distrito:</span>
-                  <span className="font-semibold text-slate-950">{defaultDistrito}</span>
-                </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Distrito:</span>
+                    <span className="font-semibold text-slate-950">
+                      {tecnicoSeleccionadoObj?.distrito || 
+                       tecnicos.find(t => t.celula === celulaSeleccionada)?.distrito || 
+                       '-'}
+                    </span>
+                  </div>
               </div>
             </div>
           </div>
@@ -486,10 +489,12 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                           </div>
 
                           <div className="grid grid-cols-2 gap-x-4 gap-y-3 pt-2 border-t border-indigo-100/60 text-xs">
-                            <div>
-                              <span className="text-slate-400 block font-semibold flex items-center gap-1">📍 Distrito</span>
-                              <span className="font-bold text-slate-800 text-sm mt-0.5 block">{defaultDistrito}</span>
-                            </div>
+                              <div>
+                                <span className="text-slate-400 block font-semibold flex items-center gap-1">📍 Distrito</span>
+                                <span className="font-bold text-slate-800 text-sm mt-0.5 block">
+                                  {tecnicoSeleccionadoObj?.distrito || '-'}
+                                </span>
+                              </div>
                             <div>
                               <span className="text-slate-400 block font-semibold flex items-center gap-1">🏢 Célula</span>
                               <span className="font-bold text-slate-800 text-sm mt-0.5 block">{celulaSeleccionada}</span>
@@ -870,7 +875,7 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
                         </p>
                       </div>
                       <div className="bg-indigo-50 px-2.5 py-1 rounded-lg text-xs font-bold text-indigo-700">
-                        Distrito: {defaultDistrito}
+                        Distrito: {tecnicoSeleccionadoObj?.distrito || '-'}
                       </div>
                     </div>
 
