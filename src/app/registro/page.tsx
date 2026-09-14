@@ -275,13 +275,13 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
         fotosSubir.push({ tipo: 'advertencia', data: fotoAdvertencia });
       }
       if (!FEATURE_FLAG_MOSTRAR_ADVERTENCIA && fotoCorrea) {
-        fotosSubir.push({ tipo: 'correa_sujecion_superior', data: fotoCorrea });
+        fotosSubir.push({ tipo: 'advertencia', data: fotoCorrea });
       }
       if (fotoNumeroSerie) {
         fotosSubir.push({ tipo: 'numero_serie', data: fotoNumeroSerie });
       }
       if (fotoEscalera) {
-        fotosSubir.push({ tipo: 'escalera_completa', data: fotoEscalera });
+        fotosSubir.push({ tipo: 'escalera', data: fotoEscalera });
       }
 
       for (const f of fotosSubir) {
