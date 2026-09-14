@@ -603,7 +603,7 @@ export default function AdminDashboardPage() {
                   {registroSeleccionado.fotos?.map((foto: Foto) => (
                     <div key={foto.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow flex flex-col relative aspect-[3/4]">
                       <span className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider border border-white/10 z-10">
-                        {foto.tipo === 'advertencia' ? 'Advertencia Colocada' : foto.tipo === 'numero_serie' ? 'Número de Serie' : 'Escalera Completa'}
+                        {foto.tipo === 'correa_sujecion_superior' ? 'Correa Sujeción' : foto.tipo === 'advertencia' ? 'Advertencia Colocada' : foto.tipo === 'numero_serie' ? 'Número de Serie' : 'Escalera Completa'}
                       </span>
                       <a
                         href={foto.url}

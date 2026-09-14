@@ -51,7 +51,7 @@ export interface Registro {
 export interface Foto {
   id: string;
   registro_id: string;
-  tipo: 'advertencia' | 'numero_serie' | 'escalera';
+  tipo: 'advertencia' | 'numero_serie' | 'escalera' | 'correa_sujecion_superior';
   url: string;
   created_at: string;
 }
