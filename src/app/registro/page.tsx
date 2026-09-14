@@ -359,7 +359,6 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
       <header className="sticky top-0 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between z-30">
         <div>
           <h1 className="font-bold text-slate-900 leading-tight">Cuidado y señalización de escaleras</h1>
-          <p className="text-xs text-slate-500 font-medium">Formulario de Colocación de Calcos</p>
         </div>
         {profile?.rol === 'administrador' && (
           <button
@@ -392,9 +391,6 @@ export default function RegistroPage({ defaultDistrito = 'Florencio Varela' }: R
             </div>
             <div>
               <h2 className="text-2xl font-extrabold text-slate-900">¡Registro Guardado!</h2>
-              <p className="text-slate-500 text-sm mt-2 px-2">
-                La evidencia fotográfica del calco y número de serie ha sido registrada correctamente.
-              </p>
             </div>
 
             <div className="w-full border-t border-slate-100 pt-6 flex flex-col gap-3">
