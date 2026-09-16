@@ -21,7 +21,8 @@ import {
   RefreshCw,
   Eye,
   CalendarDays,
-  FileText
+  FileText,
+  Trash2
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
@@ -39,6 +40,7 @@ export default function AdminDashboardPage() {
   const [filtroLider, setFiltroLider] = useState<string>('todos');
   const [registroSeleccionado, setRegistroSeleccionado] = useState<Registro | null>(null);
   const [actualizandoEstado, setActualizandoEstado] = useState(false);
+  const [eliminandoId, setEliminandoId] = useState<string | null>(null);
 
   // Resetear la célula cuando cambie el distrito
   useEffect(() => {
@@ -157,6 +159,45 @@ export default function AdminDashboardPage() {
       toast.error('Error al actualizar el estado del registro');
     } finally {
       setActualizandoEstado(false);
+    }
+  };
+
+  // Eliminar un registro de la base de datos
+  const eliminarRegistro = async (registroId: string) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar este registro de forma permanente? Se borrarán sus fotografías asociadas.')) {
+      return;
+    }
+
+    setEliminandoId(registroId);
+    try {
+      // 1. Eliminar fotos asociadas del registro
+      const { error: errorFotos } = await supabase
+        .from('fotos')
+        .delete()
+        .eq('registro_id', registroId);
+
+      if (errorFotos) console.error('Error al eliminar fotos del registro:', errorFotos);
+
+      // 2. Eliminar el registro principal
+      const { error: errorRegistro } = await supabase
+        .from('registros')
+        .delete()
+        .eq('id', registroId);
+
+      if (errorRegistro) throw errorRegistro;
+
+      // 3. Actualizar estado local
+      setRegistros((prev) => prev.filter((r) => r.id !== registroId));
+      if (registroSeleccionado?.id === registroId) {
+        setRegistroSeleccionado(null);
+      }
+
+      toast.success('Registro eliminado correctamente');
+    } catch (err: any) {
+      console.error('Error al eliminar el registro:', err);
+      toast.error('Error al eliminar el registro');
+    } finally {
+      setEliminandoId(null);
     }
   };
 
@@ -466,12 +507,20 @@ export default function AdminDashboardPage() {
                             </span>
                           )}
                         </td>
-                        <td className="py-4 px-6 text-center">
+                        <td className="py-4 px-6 text-center flex items-center justify-center gap-2">
                           <button
                             onClick={() => setRegistroSeleccionado(reg)}
                             className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100/75 px-3 py-1.5 rounded-xl transition active:scale-95"
                           >
                             <Eye className="h-3.5 w-3.5" /> Revisar
+                          </button>
+                          <button
+                            onClick={() => eliminarRegistro(reg.id)}
+                            disabled={eliminandoId === reg.id}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100/75 p-2 rounded-xl transition active:scale-95 disabled:opacity-50"
+                            title="Eliminar registro"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </td>
                       </tr>
@@ -589,6 +638,16 @@ export default function AdminDashboardPage() {
                     >
                       <Clock className="h-4 w-4" /> Dejar Pendiente
                     </button>
+
+                    <div className="pt-2 border-t border-slate-200/60 mt-1">
+                      <button
+                        onClick={() => eliminarRegistro(registroSeleccionado.id)}
+                        disabled={eliminandoId === registroSeleccionado.id}
+                        className="w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition active:scale-98 disabled:opacity-50"
+                      >
+                        <Trash2 className="h-4 w-4" /> Eliminar Registro
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
