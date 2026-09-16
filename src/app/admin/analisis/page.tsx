@@ -332,7 +332,6 @@ export default function AnalisisPage() {
           </div>
           <div>
             <h1 className="text-xl font-extrabold text-slate-900 leading-tight">Análisis Operativo</h1>
-            <p className="text-xs text-slate-500 font-medium">Módulo de Inspección de Cumplimiento & Novedades</p>
           </div>
         </div>
 
@@ -360,9 +359,6 @@ export default function AnalisisPage() {
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <Filter className="h-4 w-4 text-indigo-600" /> Filtros de Período y Alcance
             </h2>
-            <span className="text-xs font-medium text-slate-400">
-              Aplicados globalmente (Read-Only)
-            </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
@@ -767,9 +763,6 @@ export default function AnalisisPage() {
                   <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
                     <MessageSquare className="h-5 w-5 text-indigo-600" /> Inspección de Novedades & Observaciones
                   </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Visualización directa con máxima jerarquía de las observaciones redactadas.
-                  </p>
                 </div>
 
                 <div className="flex items-center gap-1 bg-slate-200/60 p-1 rounded-xl shrink-0">
