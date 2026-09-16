@@ -41,6 +41,8 @@ export interface Registro {
   distrito?: string | null;
   estado: 'pendiente' | 'aprobado' | 'observado';
   observaciones: string | null;
+  observacion_auditor?: string | null;
+  fecha_observacion_auditor?: string | null;
   created_at: string;
   tecnicos?: Tecnico;
   usuarios?: Usuario;

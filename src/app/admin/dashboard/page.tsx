@@ -23,7 +23,10 @@ import {
   CalendarDays,
   FileText,
   Trash2,
-  TrendingUp
+  TrendingUp,
+  Shield,
+  User,
+  Save
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
@@ -42,6 +45,17 @@ export default function AdminDashboardPage() {
   const [registroSeleccionado, setRegistroSeleccionado] = useState<Registro | null>(null);
   const [actualizandoEstado, setActualizandoEstado] = useState(false);
   const [eliminandoId, setEliminandoId] = useState<string | null>(null);
+  const [observacionAuditorTexto, setObservacionAuditorTexto] = useState('');
+  const [guardandoAuditor, setGuardandoAuditor] = useState(false);
+
+  // Sincronizar observación del auditor al seleccionar un registro
+  useEffect(() => {
+    if (registroSeleccionado) {
+      setObservacionAuditorTexto(registroSeleccionado.observacion_auditor || '');
+    } else {
+      setObservacionAuditorTexto('');
+    }
+  }, [registroSeleccionado]);
 
   // Resetear la célula cuando cambie el distrito
   useEffect(() => {
@@ -199,6 +213,49 @@ export default function AdminDashboardPage() {
       toast.error('Error al eliminar el registro');
     } finally {
       setEliminandoId(null);
+    }
+  };
+
+  // Guardar observación del auditor
+  const guardarObservacionAuditor = async (registroId: string) => {
+    setGuardandoAuditor(true);
+    try {
+      const now = new Date().toISOString();
+      const texto = observacionAuditorTexto.trim() || null;
+
+      const { error } = await supabase
+        .from('registros')
+        .update({
+          observacion_auditor: texto,
+          fecha_observacion_auditor: texto ? now : null
+        })
+        .eq('id', registroId);
+
+      if (error) throw error;
+
+      // Actualizar estado local
+      setRegistros((prev) =>
+        prev.map((r) =>
+          r.id === registroId
+            ? { ...r, observacion_auditor: texto, fecha_observacion_auditor: texto ? now : null }
+            : r
+        )
+      );
+
+      if (registroSeleccionado && registroSeleccionado.id === registroId) {
+        setRegistroSeleccionado((prev) =>
+          prev
+            ? { ...prev, observacion_auditor: texto, fecha_observacion_auditor: texto ? now : null }
+            : null
+        );
+      }
+
+      toast.success('Observación del auditor guardada correctamente');
+    } catch (err: any) {
+      console.error('Error al guardar observación del auditor:', err);
+      toast.error('Error al guardar la observación del auditor');
+    } finally {
+      setGuardandoAuditor(false);
     }
   };
 
@@ -591,17 +648,50 @@ export default function AdminDashboardPage() {
                       {new Date(registroSeleccionado.created_at).toLocaleDateString('es-AR')} a las {new Date(registroSeleccionado.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
                     </p>
                   </div>
-                  {registroSeleccionado.observaciones && (
-                    <>
-                      <hr className="border-slate-100" />
-                      <div>
-                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Observaciones</h4>
-                        <p className="text-xs text-slate-600 mt-1 italic bg-white p-2 rounded-lg border border-slate-200/50 leading-relaxed">
-                          "{registroSeleccionado.observaciones}"
-                        </p>
-                      </div>
-                    </>
-                  )}
+                  <hr className="border-slate-100" />
+                  <div>
+                    <h4 className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                      <User className="h-3 w-3 text-indigo-500" /> Observación del Técnico
+                    </h4>
+                    {registroSeleccionado.observaciones && registroSeleccionado.observaciones.trim() !== '' ? (
+                      <p className="text-xs text-slate-900 font-bold mt-1 bg-amber-50/80 border border-amber-200/80 p-2.5 rounded-xl leading-relaxed">
+                        "{registroSeleccionado.observaciones}"
+                      </p>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic mt-1 bg-white p-2 rounded-lg border border-slate-200/50">
+                        Sin observaciones del técnico.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Card de Observación del Auditor */}
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 flex flex-col gap-3 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <Shield className="h-4 w-4 text-indigo-600" /> Observación del Auditor
+                    </h4>
+                    {registroSeleccionado.fecha_observacion_auditor && (
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {new Date(registroSeleccionado.fecha_observacion_auditor).toLocaleDateString('es-AR')}
+                      </span>
+                    )}
+                  </div>
+
+                  <textarea
+                    value={observacionAuditorTexto}
+                    onChange={(e) => setObservacionAuditorTexto(e.target.value)}
+                    placeholder="Escriba aquí la observación o hallazgo de auditoría (opcional)..."
+                    className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-h-[85px] resize-y"
+                  />
+
+                  <button
+                    onClick={() => guardarObservacionAuditor(registroSeleccionado.id)}
+                    disabled={guardandoAuditor}
+                    className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <Save className="h-3.5 w-3.5" /> {guardandoAuditor ? 'Guardando...' : 'Guardar Observación del Auditor'}
+                  </button>
                 </div>
 
                 {/* Controles de Estado de Aprobación */}
