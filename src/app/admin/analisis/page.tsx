@@ -39,6 +39,9 @@ export default function AnalisisPage() {
   const [registros, setRegistros] = useState<Registro[]>([]);
   const [cargando, setCargando] = useState(true);
 
+  // Control de Pestañas
+  const [tabActiva, setTabActiva] = useState<'cumplimiento' | 'observaciones'>('cumplimiento');
+
   // Filtros
   const [filtroDistrito, setFiltroDistrito] = useState<string>('todos');
   const [filtroCelula, setFiltroCelula] = useState<string>('todos');
@@ -319,7 +322,7 @@ export default function AnalisisPage() {
           </div>
           <div>
             <h1 className="text-xl font-extrabold text-slate-900 leading-tight">Análisis Operativo</h1>
-            <p className="text-xs text-slate-500 font-medium">Indicadores de Cumplimiento & Inspección de Novedades</p>
+            <p className="text-xs text-slate-500 font-medium">Módulo de Inspección de Cumplimiento & Novedades</p>
           </div>
         </div>
 
@@ -340,15 +343,15 @@ export default function AnalisisPage() {
       </header>
 
       {/* Contenido Principal */}
-      <main className="flex-1 px-4 sm:px-8 py-6 max-w-7xl mx-auto w-full flex flex-col gap-8">
-        {/* BLOQUE DE FILTROS */}
+      <main className="flex-1 px-4 sm:px-8 py-6 max-w-7xl mx-auto w-full flex flex-col gap-6">
+        {/* BLOQUE DE FILTROS APLICADOS A AMBAS PESTAÑAS */}
         <section className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <Filter className="h-4 w-4 text-indigo-600" /> Filtros de Período y Alcance
             </h2>
             <span className="text-xs font-medium text-slate-400">
-              Consultas en Tiempo Real (Read-Only)
+              Aplicado a ambas vistas (Read-Only)
             </span>
           </div>
 
@@ -433,374 +436,390 @@ export default function AnalisisPage() {
         </section>
 
         {/* ========================================== */}
-        {/* SECCIÓN 1: CUMPLIMIENTO DE RELEVAMIENTO */}
+        {/* NAVEGACIÓN POR PESTAÑAS (TABS) */}
         {/* ========================================== */}
-        <section className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h2 className="text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-                <UserCheck className="h-5 w-5 text-indigo-600" /> Cumplimiento de Relevamiento
-              </h2>
-              <p className="text-xs text-slate-500">
-                Porcentaje de técnicos únicos inspeccionados sobre el padrón activo en el período seleccionado.
-              </p>
-            </div>
-          </div>
+        <div className="flex items-center gap-2 border-b border-slate-200/80 pt-2">
+          <button
+            onClick={() => setTabActiva('cumplimiento')}
+            className={`pb-3 px-5 text-sm font-extrabold flex items-center gap-2 border-b-2 transition ${
+              tabActiva === 'cumplimiento'
+                ? 'border-indigo-600 text-indigo-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <UserCheck className="h-4.5 w-4.5" /> Cumplimiento
+          </button>
 
-          {/* TARJETAS DE KPIS GENERALES */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Total Técnicos */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Técnicos Activos</span>
-                <span className="text-3xl font-black text-slate-900 mt-1 block">
-                  {cargando ? '...' : totalTecnicosActivos}
-                </span>
-                <span className="text-[11px] font-medium text-slate-500 mt-1 block">Universo total en alcance</span>
-              </div>
-              <div className="h-12 w-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                <Users className="h-6 w-6" />
-              </div>
-            </div>
+          <button
+            onClick={() => setTabActiva('observaciones')}
+            className={`pb-3 px-5 text-sm font-extrabold flex items-center gap-2 border-b-2 transition ${
+              tabActiva === 'observaciones'
+                ? 'border-indigo-600 text-indigo-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <MessageSquare className="h-4.5 w-4.5" /> Observaciones
+            {totalConObs > 0 && (
+              <span className="ml-1 bg-amber-100 text-amber-800 text-[11px] px-2 py-0.5 rounded-full font-extrabold">
+                {totalConObs}
+              </span>
+            )}
+          </button>
+        </div>
 
-            {/* Relevados / Registrados */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider block">Relevados</span>
-                <span className="text-3xl font-black text-emerald-700 mt-1 block">
-                  {cargando ? '...' : tecnicosUnicosRelevados}
-                </span>
-                <span className="text-[11px] font-medium text-slate-500 mt-1 block">Técnicos únicos registrados</span>
+        {/* ========================================== */}
+        {/* PESTAÑA 1: CUMPLIMIENTO */}
+        {/* ========================================== */}
+        {tabActiva === 'cumplimiento' && (
+          <section className="flex flex-col gap-6 animate-in fade-in duration-200">
+            {/* TARJETAS DE KPIS GENERALES */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Total Técnicos */}
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Técnicos Activos</span>
+                  <span className="text-3xl font-black text-slate-900 mt-1 block">
+                    {cargando ? '...' : totalTecnicosActivos}
+                  </span>
+                  <span className="text-[11px] font-medium text-slate-500 mt-1 block">Universo total en alcance</span>
+                </div>
+                <div className="h-12 w-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <Users className="h-6 w-6" />
+                </div>
               </div>
-              <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="h-6 w-6" />
-              </div>
-            </div>
 
-            {/* Pendientes */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-amber-600 uppercase tracking-wider block">Pendientes</span>
-                <span className="text-3xl font-black text-amber-600 mt-1 block">
-                  {cargando ? '...' : tecnicosPendientes}
-                </span>
-                <span className="text-[11px] font-medium text-slate-500 mt-1 block">Sin registro en el período</span>
+              {/* Relevados / Registrados */}
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider block">Relevados</span>
+                  <span className="text-3xl font-black text-emerald-700 mt-1 block">
+                    {cargando ? '...' : tecnicosUnicosRelevados}
+                  </span>
+                  <span className="text-[11px] font-medium text-slate-500 mt-1 block">Técnicos únicos registrados</span>
+                </div>
+                <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="h-6 w-6" />
+                </div>
               </div>
-              <div className="h-12 w-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                <Clock className="h-6 w-6" />
-              </div>
-            </div>
 
-            {/* % Cumplimiento */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Cumplimiento</span>
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
-                  {porcentajeCumplimiento}%
-                </span>
+              {/* Pendientes */}
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-amber-600 uppercase tracking-wider block">Pendientes</span>
+                  <span className="text-3xl font-black text-amber-600 mt-1 block">
+                    {cargando ? '...' : tecnicosPendientes}
+                  </span>
+                  <span className="text-[11px] font-medium text-slate-500 mt-1 block">Sin registro en el período</span>
+                </div>
+                <div className="h-12 w-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <Clock className="h-6 w-6" />
+                </div>
               </div>
-              <div className="mt-2">
-                <span className="text-3xl font-black text-indigo-950 block">{porcentajeCumplimiento}%</span>
-                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
-                  <div
-                    className="bg-indigo-600 h-full transition-all duration-500 rounded-full"
-                    style={{ width: `${Math.min(100, parseFloat(porcentajeCumplimiento))}%` }}
-                  />
+
+              {/* % Cumplimiento */}
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Cumplimiento</span>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
+                    {porcentajeCumplimiento}%
+                  </span>
+                </div>
+                <div className="mt-2">
+                  <span className="text-3xl font-black text-indigo-950 block">{porcentajeCumplimiento}%</span>
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
+                    <div
+                      className="bg-indigo-600 h-full transition-all duration-500 rounded-full"
+                      style={{ width: `${Math.min(100, parseFloat(porcentajeCumplimiento))}%` }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* TABLA PRINCIPAL: CUMPLIMIENTO POR DISTRITO Y CÉLULA */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">Análisis por Distrito y Célula</h3>
-                <p className="text-xs text-slate-500">Seleccioná una célula para desplegar la lista de técnicos y su estado.</p>
+            {/* TABLA PRINCIPAL: CUMPLIMIENTO POR DISTRITO Y CÉLULA */}
+            <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Análisis por Distrito y Célula</h3>
+                  <p className="text-xs text-slate-500">Seleccioná una célula para desplegar la lista de técnicos y su estado.</p>
+                </div>
+                <span className="text-xs font-bold bg-slate-100 text-slate-700 px-3 py-1 rounded-full">
+                  {listaEstadisticasCelulas.length} Células
+                </span>
               </div>
-              <span className="text-xs font-bold bg-slate-100 text-slate-700 px-3 py-1 rounded-full">
-                {listaEstadisticasCelulas.length} Células
-              </span>
-            </div>
 
-            {cargando ? (
-              <div className="py-12 flex flex-col items-center justify-center gap-3 text-slate-400">
-                <div className="h-8 w-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                <span className="text-sm font-medium">Calculando cumplimiento operativo...</span>
-              </div>
-            ) : listaEstadisticasCelulas.length === 0 ? (
-              <div className="py-12 text-center text-slate-400 text-sm">
-                No se encontraron datos para los filtros seleccionados.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-100 bg-slate-50/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                      <th className="py-3.5 px-6">Distrito</th>
-                      <th className="py-3.5 px-6">Célula</th>
-                      <th className="py-3.5 px-6 text-center">Técnicos</th>
-                      <th className="py-3.5 px-6 text-center">Relevados</th>
-                      <th className="py-3.5 px-6 text-center">Pendientes</th>
-                      <th className="py-3.5 px-6 text-center">Cumplimiento</th>
-                      <th className="py-3.5 px-6 text-right">Detalle</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-sm font-medium text-slate-700">
-                    {listaEstadisticasCelulas.map((item) => {
-                      const key = `${item.distrito}__${item.celula}`;
-                      const estaExpandido = celulaExpandida === key;
+              {cargando ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-3 text-slate-400">
+                  <div className="h-8 w-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                  <span className="text-sm font-medium">Calculando cumplimiento operativo...</span>
+                </div>
+              ) : listaEstadisticasCelulas.length === 0 ? (
+                <div className="py-12 text-center text-slate-400 text-sm">
+                  No se encontraron datos para los filtros seleccionados.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                        <th className="py-3.5 px-6">Distrito</th>
+                        <th className="py-3.5 px-6">Célula</th>
+                        <th className="py-3.5 px-6 text-center">Técnicos</th>
+                        <th className="py-3.5 px-6 text-center">Relevados</th>
+                        <th className="py-3.5 px-6 text-center">Pendientes</th>
+                        <th className="py-3.5 px-6 text-center">Cumplimiento</th>
+                        <th className="py-3.5 px-6 text-right">Detalle</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                      {listaEstadisticasCelulas.map((item) => {
+                        const key = `${item.distrito}__${item.celula}`;
+                        const estaExpandido = celulaExpandida === key;
 
-                      return (
-                        <React.Fragment key={key}>
-                          <tr
-                            onClick={() => setCelulaExpandida(estaExpandido ? null : key)}
-                            className={`hover:bg-indigo-50/40 cursor-pointer transition ${
-                              estaExpandido ? 'bg-indigo-50/30' : ''
-                            }`}
-                          >
-                            <td className="py-4 px-6 font-bold text-slate-900">{item.distrito}</td>
-                            <td className="py-4 px-6 font-semibold text-slate-800">
-                              <span className="inline-flex items-center gap-1.5">
-                                <Building className="h-4 w-4 text-indigo-500" /> {item.celula}
-                              </span>
-                            </td>
-                            <td className="py-4 px-6 text-center font-bold text-slate-900">{item.totalTecnicos}</td>
-                            <td className="py-4 px-6 text-center font-bold text-emerald-600">{item.relevados}</td>
-                            <td className="py-4 px-6 text-center font-bold text-amber-600">{item.pendientes}</td>
-                            <td className="py-4 px-6 text-center">
-                              <div className="inline-flex items-center gap-2">
-                                <span
-                                  className={`text-xs font-extrabold px-2.5 py-1 rounded-full ${
-                                    item.cumplimientoPct >= 80
-                                      ? 'bg-emerald-100 text-emerald-800'
-                                      : item.cumplimientoPct >= 50
-                                      ? 'bg-amber-100 text-amber-800'
-                                      : 'bg-red-100 text-red-800'
-                                  }`}
-                                >
-                                  {item.cumplimientoPct}%
+                        return (
+                          <React.Fragment key={key}>
+                            <tr
+                              onClick={() => setCelulaExpandida(estaExpandido ? null : key)}
+                              className={`hover:bg-indigo-50/40 cursor-pointer transition ${
+                                estaExpandido ? 'bg-indigo-50/30' : ''
+                              }`}
+                            >
+                              <td className="py-4 px-6 font-bold text-slate-900">{item.distrito}</td>
+                              <td className="py-4 px-6 font-semibold text-slate-800">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <Building className="h-4 w-4 text-indigo-500" /> {item.celula}
                                 </span>
-                              </div>
-                            </td>
-                            <td className="py-4 px-6 text-right">
-                              <button className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-white border border-indigo-200 px-3 py-1.5 rounded-xl shadow-sm transition inline-flex items-center gap-1">
-                                {estaExpandido ? (
-                                  <>
-                                    Ocultar <ChevronUp className="h-3.5 w-3.5" />
-                                  </>
-                                ) : (
-                                  <>
-                                    Ver Técnicos <ChevronDown className="h-3.5 w-3.5" />
-                                  </>
-                                )}
-                              </button>
-                            </td>
-                          </tr>
-
-                          {/* FILA DESPLEGABLE: DETALLE DE TÉCNICOS */}
-                          {estaExpandido && (
-                            <tr>
-                              <td colSpan={7} className="p-0 bg-slate-100/60 border-y border-slate-200/60">
-                                <div className="p-5 flex flex-col gap-3">
-                                  <div className="flex items-center justify-between">
-                                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                                      <Users className="h-4 w-4 text-indigo-600" /> Detalle de Técnicos de {item.celula} ({item.totalTecnicos})
-                                    </h4>
-                                    <span className="text-xs font-medium text-slate-500">
-                                      {item.relevados} Registrados • {item.pendientes} Pendientes
-                                    </span>
-                                  </div>
-
-                                  <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                                    <table className="w-full text-left text-xs">
-                                      <thead>
-                                        <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                          <th className="py-2.5 px-4">Técnico</th>
-                                          <th className="py-2.5 px-4">Legajo</th>
-                                          <th className="py-2.5 px-4">Líder a Cargo</th>
-                                          <th className="py-2.5 px-4 text-center">Estado</th>
-                                          <th className="py-2.5 px-4 text-right">Último Registro</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody className="divide-y divide-slate-100 font-medium">
-                                        {item.tecnicosDetalle.map((td) => (
-                                          <tr key={td.tecnico.id} className="hover:bg-slate-50/80">
-                                            <td className="py-2.5 px-4 font-bold text-slate-900">{td.tecnico.nombre}</td>
-                                            <td className="py-2.5 px-4 font-mono text-slate-600">{td.tecnico.legajo}</td>
-                                            <td className="py-2.5 px-4 text-slate-700">{td.tecnico.usuarios?.nombre || '—'}</td>
-                                            <td className="py-2.5 px-4 text-center">
-                                              {td.estado === 'REGISTRADO' ? (
-                                                <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[10px]">
-                                                  <CheckCircle2 className="h-3 w-3" /> REGISTRADO ({td.cantRegistros})
-                                                </span>
-                                              ) : (
-                                                <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full text-[10px]">
-                                                  <Clock className="h-3 w-3" /> PENDIENTE
-                                                </span>
-                                              )}
-                                            </td>
-                                            <td className="py-2.5 px-4 text-right font-mono text-slate-600">
-                                              {td.ultimoRegistroFecha
-                                                ? new Date(td.ultimoRegistroFecha).toLocaleDateString('es-AR')
-                                                : '—'}
-                                            </td>
-                                          </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
-                                  </div>
+                              </td>
+                              <td className="py-4 px-6 text-center font-bold text-slate-900">{item.totalTecnicos}</td>
+                              <td className="py-4 px-6 text-center font-bold text-emerald-600">{item.relevados}</td>
+                              <td className="py-4 px-6 text-center font-bold text-amber-600">{item.pendientes}</td>
+                              <td className="py-4 px-6 text-center">
+                                <div className="inline-flex items-center gap-2">
+                                  <span
+                                    className={`text-xs font-extrabold px-2.5 py-1 rounded-full ${
+                                      item.cumplimientoPct >= 80
+                                        ? 'bg-emerald-100 text-emerald-800'
+                                        : item.cumplimientoPct >= 50
+                                        ? 'bg-amber-100 text-amber-800'
+                                        : 'bg-red-100 text-red-800'
+                                    }`}
+                                  >
+                                    {item.cumplimientoPct}%
+                                  </span>
                                 </div>
                               </td>
+                              <td className="py-4 px-6 text-right">
+                                <button className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-white border border-indigo-200 px-3 py-1.5 rounded-xl shadow-sm transition inline-flex items-center gap-1">
+                                  {estaExpandido ? (
+                                    <>
+                                      Ocultar <ChevronUp className="h-3.5 w-3.5" />
+                                    </>
+                                  ) : (
+                                    <>
+                                      Ver Técnicos <ChevronDown className="h-3.5 w-3.5" />
+                                    </>
+                                  )}
+                                </button>
+                              </td>
                             </tr>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </section>
+
+                            {/* FILA DESPLEGABLE: DETALLE DE TÉCNICOS */}
+                            {estaExpandido && (
+                              <tr>
+                                <td colSpan={7} className="p-0 bg-slate-100/60 border-y border-slate-200/60">
+                                  <div className="p-5 flex flex-col gap-3">
+                                    <div className="flex items-center justify-between">
+                                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                                        <Users className="h-4 w-4 text-indigo-600" /> Detalle de Técnicos de {item.celula} ({item.totalTecnicos})
+                                      </h4>
+                                      <span className="text-xs font-medium text-slate-500">
+                                        {item.relevados} Registrados • {item.pendientes} Pendientes
+                                      </span>
+                                    </div>
+
+                                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                                      <table className="w-full text-left text-xs">
+                                        <thead>
+                                          <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                            <th className="py-2.5 px-4">Técnico</th>
+                                            <th className="py-2.5 px-4">Legajo</th>
+                                            <th className="py-2.5 px-4">Líder a Cargo</th>
+                                            <th className="py-2.5 px-4 text-center">Estado</th>
+                                            <th className="py-2.5 px-4 text-right">Último Registro</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 font-medium">
+                                          {item.tecnicosDetalle.map((td) => (
+                                            <tr key={td.tecnico.id} className="hover:bg-slate-50/80">
+                                              <td className="py-2.5 px-4 font-bold text-slate-900">{td.tecnico.nombre}</td>
+                                              <td className="py-2.5 px-4 font-mono text-slate-600">{td.tecnico.legajo}</td>
+                                              <td className="py-2.5 px-4 text-slate-700">{td.tecnico.usuarios?.nombre || '—'}</td>
+                                              <td className="py-2.5 px-4 text-center">
+                                                {td.estado === 'REGISTRADO' ? (
+                                                  <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[10px]">
+                                                    <CheckCircle2 className="h-3 w-3" /> REGISTRADO ({td.cantRegistros})
+                                                  </span>
+                                                ) : (
+                                                  <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full text-[10px]">
+                                                    <Clock className="h-3 w-3" /> PENDIENTE
+                                                  </span>
+                                                )}
+                                              </td>
+                                              <td className="py-2.5 px-4 text-right font-mono text-slate-600">
+                                                {td.ultimoRegistroFecha
+                                                  ? new Date(td.ultimoRegistroFecha).toLocaleDateString('es-AR')
+                                                  : '—'}
+                                              </td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* ========================================== */}
-        {/* SECCIÓN 2: ANÁLISIS DE OBSERVACIONES */}
+        {/* PESTAÑA 2: OBSERVACIONES */}
         {/* ========================================== */}
-        <section className="flex flex-col gap-4 pt-4 border-t border-slate-200">
-          <div>
-            <h2 className="text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-indigo-600" /> Novedades y Observaciones
-            </h2>
-            <p className="text-xs text-slate-500">
-              Análisis detallado de las observaciones ingresadas en los registros de inspección.
-            </p>
-          </div>
+        {tabActiva === 'observaciones' && (
+          <section className="flex flex-col gap-6 animate-in fade-in duration-200">
+            {/* KPIS DE OBSERVACIONES */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Registros Totales</span>
+                  <span className="text-3xl font-black text-slate-900 mt-1 block">{cargando ? '...' : totalRegistrosEnPeriodo}</span>
+                  <span className="text-[11px] text-slate-500 block mt-1">En el período filtrado</span>
+                </div>
+                <div className="h-12 w-12 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                  <FileText className="h-6 w-6" />
+                </div>
+              </div>
 
-          {/* KPIS DE OBSERVACIONES */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Registros Totales</span>
-                <span className="text-3xl font-black text-slate-900 mt-1 block">{cargando ? '...' : totalRegistrosEnPeriodo}</span>
-                <span className="text-[11px] text-slate-500 block mt-1">En el período filtrado</span>
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-amber-600 uppercase tracking-wider block">Con Observación</span>
+                  <span className="text-3xl font-black text-amber-600 mt-1 block">{cargando ? '...' : totalConObs}</span>
+                  <span className="text-[11px] text-slate-500 block mt-1">Reportaron novedades</span>
+                </div>
+                <div className="h-12 w-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <ShieldAlert className="h-6 w-6" />
+                </div>
               </div>
-              <div className="h-12 w-12 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
-                <FileText className="h-6 w-6" />
-              </div>
-            </div>
 
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-amber-600 uppercase tracking-wider block">Con Observación</span>
-                <span className="text-3xl font-black text-amber-600 mt-1 block">{cargando ? '...' : totalConObs}</span>
-                <span className="text-[11px] text-slate-500 block mt-1">Reportaron novedades</span>
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider block">Sin Observación</span>
+                  <span className="text-3xl font-black text-emerald-600 mt-1 block">{cargando ? '...' : totalSinObs}</span>
+                  <span className="text-[11px] text-slate-500 block mt-1">Inspección limpia</span>
+                </div>
+                <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="h-6 w-6" />
+                </div>
               </div>
-              <div className="h-12 w-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                <ShieldAlert className="h-6 w-6" />
-              </div>
-            </div>
 
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider block">Sin Observación</span>
-                <span className="text-3xl font-black text-emerald-600 mt-1 block">{cargando ? '...' : totalSinObs}</span>
-                <span className="text-[11px] text-slate-500 block mt-1">Inspección limpia</span>
-              </div>
-              <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="h-6 w-6" />
-              </div>
-            </div>
-
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">% Novedades</span>
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
-                  {pctConObs}%
-                </span>
-              </div>
-              <div className="mt-2">
-                <span className="text-3xl font-black text-indigo-950 block">{pctConObs}%</span>
-                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
-                  <div
-                    className="bg-amber-500 h-full transition-all duration-500 rounded-full"
-                    style={{ width: `${Math.min(100, parseFloat(pctConObs))}%` }}
-                  />
+              <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">% Novedades</span>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
+                    {pctConObs}%
+                  </span>
+                </div>
+                <div className="mt-2">
+                  <span className="text-3xl font-black text-indigo-950 block">{pctConObs}%</span>
+                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
+                    <div
+                      className="bg-amber-500 h-full transition-all duration-500 rounded-full"
+                      style={{ width: `${Math.min(100, parseFloat(pctConObs))}%` }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* TABLA DE OBSERVACIONES */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">Listado de Observaciones Registradas</h3>
-                <p className="text-xs text-slate-500">Mapeo de textos de observación ingresados por los técnicos.</p>
+            {/* TABLA DE OBSERVACIONES */}
+            <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Listado de Observaciones Registradas</h3>
+                  <p className="text-xs text-slate-500">Mapeo de textos de observación ingresados por los técnicos.</p>
+                </div>
+                <span className="text-xs font-bold bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
+                  {registrosConObservacion.length} Novedades
+                </span>
               </div>
-              <span className="text-xs font-bold bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
-                {registrosConObservacion.length} Novedades
-              </span>
-            </div>
 
-            {cargando ? (
-              <div className="py-12 flex flex-col items-center justify-center gap-3 text-slate-400">
-                <div className="h-8 w-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                <span className="text-sm font-medium">Cargando observaciones...</span>
-              </div>
-            ) : registrosConObservacion.length === 0 ? (
-              <div className="py-12 text-center text-slate-400 text-sm">
-                No existen observaciones registradas para el período y filtros seleccionados.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-100 bg-slate-50/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                      <th className="py-3.5 px-6">Fecha</th>
-                      <th className="py-3.5 px-6">Distrito</th>
-                      <th className="py-3.5 px-6">Célula</th>
-                      <th className="py-3.5 px-6">Técnico</th>
-                      <th className="py-3.5 px-6">Líder</th>
-                      <th className="py-3.5 px-6">Observación</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-sm font-medium text-slate-800">
-                    {registrosConObservacion.map((reg) => (
-                      <tr key={reg.id} className="hover:bg-slate-50/80 transition">
-                        <td className="py-4 px-6 whitespace-nowrap font-mono text-xs text-slate-600">
-                          {new Date(reg.created_at).toLocaleDateString('es-AR')}
-                          <span className="block text-[10px] text-slate-400">
-                            {new Date(reg.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
-                          </span>
-                        </td>
-                        <td className="py-4 px-6 font-bold text-slate-900 whitespace-nowrap">{(reg as any).distrito || reg.tecnicos?.distrito || '-'}</td>
-                        <td className="py-4 px-6 font-semibold text-slate-800 whitespace-nowrap">{(reg as any).central || reg.tecnicos?.celula || '-'}</td>
-                        <td className="py-4 px-6 whitespace-nowrap font-bold text-slate-900">{reg.tecnico_nombre}</td>
-                        <td className="py-4 px-6 whitespace-nowrap text-slate-600">{(reg as any).lider_nombre || reg.usuarios?.nombre || '-'}</td>
-                        <td className="py-4 px-6">
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="text-slate-950 font-semibold bg-amber-50/70 border border-amber-200/60 p-2.5 rounded-xl text-xs leading-relaxed max-w-xl">
-                              "{reg.observaciones}"
-                            </p>
-                            {reg.observaciones && reg.observaciones.length > 60 && (
-                              <button
-                                onClick={() => setObservacionModal(reg)}
-                                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2.5 py-1.5 rounded-lg whitespace-nowrap transition"
-                              >
-                                Ver Completa
-                              </button>
-                            )}
-                          </div>
-                        </td>
+              {cargando ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-3 text-slate-400">
+                  <div className="h-8 w-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                  <span className="text-sm font-medium">Cargando observaciones...</span>
+                </div>
+              ) : registrosConObservacion.length === 0 ? (
+                <div className="py-12 text-center text-slate-400 text-sm">
+                  No existen observaciones registradas para el período y filtros seleccionados.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                        <th className="py-3.5 px-6">Fecha</th>
+                        <th className="py-3.5 px-6">Distrito</th>
+                        <th className="py-3.5 px-6">Célula</th>
+                        <th className="py-3.5 px-6">Técnico</th>
+                        <th className="py-3.5 px-6">Líder</th>
+                        <th className="py-3.5 px-6">Observación</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </section>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-sm font-medium text-slate-800">
+                      {registrosConObservacion.map((reg) => (
+                        <tr key={reg.id} className="hover:bg-slate-50/80 transition">
+                          <td className="py-4 px-6 whitespace-nowrap font-mono text-xs text-slate-600">
+                            {new Date(reg.created_at).toLocaleDateString('es-AR')}
+                            <span className="block text-[10px] text-slate-400">
+                              {new Date(reg.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
+                            </span>
+                          </td>
+                          <td className="py-4 px-6 font-bold text-slate-900 whitespace-nowrap">{(reg as any).distrito || reg.tecnicos?.distrito || '-'}</td>
+                          <td className="py-4 px-6 font-semibold text-slate-800 whitespace-nowrap">{(reg as any).central || reg.tecnicos?.celula || '-'}</td>
+                          <td className="py-4 px-6 whitespace-nowrap font-bold text-slate-900">{reg.tecnico_nombre}</td>
+                          <td className="py-4 px-6 whitespace-nowrap text-slate-600">{(reg as any).lider_nombre || reg.usuarios?.nombre || '-'}</td>
+                          <td className="py-4 px-6">
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-slate-950 font-semibold bg-amber-50/70 border border-amber-200/60 p-2.5 rounded-xl text-xs leading-relaxed max-w-xl">
+                                "{reg.observaciones}"
+                              </p>
+                              {reg.observaciones && reg.observaciones.length > 60 && (
+                                <button
+                                  onClick={() => setObservacionModal(reg)}
+                                  className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2.5 py-1.5 rounded-lg whitespace-nowrap transition"
+                                >
+                                  Ver Completa
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
       </main>
 
       {/* MODAL DETALLE OBSERVACIÓN EXTENSA */}
