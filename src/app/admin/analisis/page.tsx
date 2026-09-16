@@ -25,6 +25,7 @@ import {
   Search,
   MessageSquare,
   ShieldAlert,
+  Shield,
   Percent,
   Info,
   X
@@ -886,8 +887,19 @@ export default function AnalisisPage() {
                                   </div>
                                 ) : (
                                   <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
-                                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Sin novedad
+                                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Sin novedad del técnico
                                   </span>
+                                )}
+
+                                {reg.observacion_auditor && (
+                                  <div className="mt-2 bg-indigo-50/90 border border-indigo-200 rounded-2xl p-3 shadow-sm text-slate-950 flex flex-col gap-1.5">
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-indigo-800 bg-indigo-100 px-2 py-0.5 rounded-md flex items-center gap-1 w-fit">
+                                      <Shield className="h-3 w-3 text-indigo-600" /> Observación del Auditor
+                                    </span>
+                                    <p className="text-xs font-bold text-slate-900 leading-snug whitespace-pre-wrap">
+                                      "{reg.observacion_auditor}"
+                                    </p>
+                                  </div>
                                 )}
                               </td>
                             </tr>
@@ -942,8 +954,19 @@ export default function AnalisisPage() {
                           ) : (
                             <div>
                               <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
-                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Sin novedad
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Sin novedad del técnico
                               </span>
+                            </div>
+                          )}
+
+                          {reg.observacion_auditor && (
+                            <div className="bg-indigo-50/90 border border-indigo-200 rounded-2xl p-3 shadow-sm text-slate-950 flex flex-col gap-1.5">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-800 bg-indigo-100 px-2 py-0.5 rounded-md flex items-center gap-1 w-fit">
+                                <Shield className="h-3 w-3 text-indigo-600" /> Observación del Auditor
+                              </span>
+                              <p className="text-xs font-bold text-slate-900 leading-snug whitespace-pre-wrap">
+                                "{reg.observacion_auditor}"
+                              </p>
                             </div>
                           )}
 
@@ -1005,11 +1028,24 @@ export default function AnalisisPage() {
               </div>
 
               <div>
-                <span className="text-slate-500 font-bold block mb-1.5">Observación Completa:</span>
+                <span className="text-slate-500 font-bold block mb-1.5 flex items-center gap-1.5">
+                  <ShieldAlert className="h-4 w-4 text-amber-600" /> Observación del Técnico:
+                </span>
                 <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl text-slate-950 font-bold text-sm leading-relaxed shadow-inner">
-                  "{observacionModal.observaciones}"
+                  {observacionModal.observaciones ? `"${observacionModal.observaciones}"` : 'Sin observación registrada por el técnico.'}
                 </div>
               </div>
+
+              {observacionModal.observacion_auditor && (
+                <div>
+                  <span className="text-slate-500 font-bold block mb-1.5 flex items-center gap-1.5">
+                    <Shield className="h-4 w-4 text-indigo-600" /> Observación del Auditor:
+                  </span>
+                  <div className="bg-indigo-50 border border-indigo-200 p-4 rounded-xl text-slate-950 font-bold text-sm leading-relaxed shadow-inner">
+                    "{observacionModal.observacion_auditor}"
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end pt-2">
