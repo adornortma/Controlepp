@@ -42,7 +42,10 @@ export default function AnalisisPage() {
   // Control de Pestañas
   const [tabActiva, setTabActiva] = useState<'cumplimiento' | 'observaciones'>('cumplimiento');
 
-  // Filtros
+  // Filtro secundario de la pestaña Observaciones (novedades | todas | limpias)
+  const [filtroTipoObs, setFiltroTipoObs] = useState<'novedades' | 'todas' | 'limpias'>('novedades');
+
+  // Filtros globales
   const [filtroDistrito, setFiltroDistrito] = useState<string>('todos');
   const [filtroCelula, setFiltroCelula] = useState<string>('todos');
   const [filtroLider, setFiltroLider] = useState<string>('todos');
@@ -138,6 +141,7 @@ export default function AnalisisPage() {
     setFiltroLider('todos');
     setFechaDesde('');
     setFechaHasta('');
+    setFiltroTipoObs('novedades');
     toast.success('Filtros restablecidos');
   };
 
@@ -277,7 +281,6 @@ export default function AnalisisPage() {
       item.totalTecnicos > 0
         ? parseFloat(((item.relevados / item.totalTecnicos) * 100).toFixed(1))
         : 0;
-    // Ordenar técnicos del detalle (Pendientes primero, luego por nombre)
     item.tecnicosDetalle.sort((a, b) => {
       if (a.estado !== b.estado) {
         return a.estado === 'PENDIENTE' ? -1 : 1;
@@ -287,7 +290,6 @@ export default function AnalisisPage() {
     return item;
   });
 
-  // Ordenar la tabla por Distrito y luego por Célula
   listaEstadisticasCelulas.sort((a, b) => {
     if (a.distrito !== b.distrito) return a.distrito.localeCompare(b.distrito);
     return a.celula.localeCompare(b.celula);
@@ -304,6 +306,14 @@ export default function AnalisisPage() {
     totalRegistrosEnPeriodo > 0
       ? ((totalConObs / totalRegistrosEnPeriodo) * 100).toFixed(1)
       : '0.0';
+
+  // Registros finales para el listado de observaciones según el filtro secundario
+  const listaObservacionesFinal = registrosFiltrados.filter((reg) => {
+    const tieneObs = reg.observaciones && reg.observaciones.trim() !== '';
+    if (filtroTipoObs === 'novedades') return tieneObs;
+    if (filtroTipoObs === 'limpias') return !tieneObs;
+    return true;
+  });
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-slate-50 pb-16">
@@ -351,7 +361,7 @@ export default function AnalisisPage() {
               <Filter className="h-4 w-4 text-indigo-600" /> Filtros de Período y Alcance
             </h2>
             <span className="text-xs font-medium text-slate-400">
-              Aplicado a ambas vistas (Read-Only)
+              Aplicados globalmente (Read-Only)
             </span>
           </div>
 
@@ -710,9 +720,9 @@ export default function AnalisisPage() {
 
               <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-amber-600 uppercase tracking-wider block">Con Observación</span>
+                  <span className="text-xs font-bold text-amber-600 uppercase tracking-wider block">Con Novedad</span>
                   <span className="text-3xl font-black text-amber-600 mt-1 block">{cargando ? '...' : totalConObs}</span>
-                  <span className="text-[11px] text-slate-500 block mt-1">Reportaron novedades</span>
+                  <span className="text-[11px] text-slate-500 block mt-1">Reportaron observaciones</span>
                 </div>
                 <div className="h-12 w-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
                   <ShieldAlert className="h-6 w-6" />
@@ -721,7 +731,7 @@ export default function AnalisisPage() {
 
               <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider block">Sin Observación</span>
+                  <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider block">Sin Novedad</span>
                   <span className="text-3xl font-black text-emerald-600 mt-1 block">{cargando ? '...' : totalSinObs}</span>
                   <span className="text-[11px] text-slate-500 block mt-1">Inspección limpia</span>
                 </div>
@@ -749,16 +759,51 @@ export default function AnalisisPage() {
               </div>
             </div>
 
-            {/* TABLA DE OBSERVACIONES */}
+            {/* TABLA/LISTADO CON PROTAGONISMO DE OBSERVACIÓN */}
             <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              {/* Header con Interruptor de Filtro de Novedades */}
+              <div className="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-50/50">
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">Listado de Observaciones Registradas</h3>
-                  <p className="text-xs text-slate-500">Mapeo de textos de observación ingresados por los técnicos.</p>
+                  <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-indigo-600" /> Inspección de Novedades & Observaciones
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Visualización directa con máxima jerarquía de las observaciones redactadas.
+                  </p>
                 </div>
-                <span className="text-xs font-bold bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
-                  {registrosConObservacion.length} Novedades
-                </span>
+
+                <div className="flex items-center gap-1 bg-slate-200/60 p-1 rounded-xl shrink-0">
+                  <button
+                    onClick={() => setFiltroTipoObs('novedades')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                      filtroTipoObs === 'novedades'
+                        ? 'bg-amber-500 text-white shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Solo Novedades ({totalConObs})
+                  </button>
+                  <button
+                    onClick={() => setFiltroTipoObs('todas')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                      filtroTipoObs === 'todas'
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Todas ({totalRegistrosEnPeriodo})
+                  </button>
+                  <button
+                    onClick={() => setFiltroTipoObs('limpias')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                      filtroTipoObs === 'limpias'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Sin Novedad ({totalSinObs})
+                  </button>
+                </div>
               </div>
 
               {cargando ? (
@@ -766,56 +811,160 @@ export default function AnalisisPage() {
                   <div className="h-8 w-8 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
                   <span className="text-sm font-medium">Cargando observaciones...</span>
                 </div>
-              ) : registrosConObservacion.length === 0 ? (
+              ) : listaObservacionesFinal.length === 0 ? (
                 <div className="py-12 text-center text-slate-400 text-sm">
-                  No existen observaciones registradas para el período y filtros seleccionados.
+                  No existen registros para la vista seleccionada.
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-slate-100 bg-slate-50/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                        <th className="py-3.5 px-6">Fecha</th>
-                        <th className="py-3.5 px-6">Distrito</th>
-                        <th className="py-3.5 px-6">Célula</th>
-                        <th className="py-3.5 px-6">Técnico</th>
-                        <th className="py-3.5 px-6">Líder</th>
-                        <th className="py-3.5 px-6">Observación</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-sm font-medium text-slate-800">
-                      {registrosConObservacion.map((reg) => (
-                        <tr key={reg.id} className="hover:bg-slate-50/80 transition">
-                          <td className="py-4 px-6 whitespace-nowrap font-mono text-xs text-slate-600">
-                            {new Date(reg.created_at).toLocaleDateString('es-AR')}
-                            <span className="block text-[10px] text-slate-400">
-                              {new Date(reg.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
+                <>
+                  {/* VISTA ESCRITORIO (TABLA CON COLUMNA DE OBSERVACIÓN PROTAGONISTA 45% ANCHO) */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-200 bg-slate-100/70 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
+                          <th className="py-3.5 px-5 w-[12%]">Fecha</th>
+                          <th className="py-3.5 px-5 w-[14%]">Distrito / Célula</th>
+                          <th className="py-3.5 px-5 w-[18%]">Técnico</th>
+                          <th className="py-3.5 px-5 w-[14%]">Líder</th>
+                          <th className="py-3.5 px-6 w-[42%]">Observación / Novedad</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-sm">
+                        {listaObservacionesFinal.map((reg) => {
+                          const tieneObs = reg.observaciones && reg.observaciones.trim() !== '';
+
+                          return (
+                            <tr
+                              key={reg.id}
+                              className={`hover:bg-slate-50/80 transition ${
+                                tieneObs ? 'bg-amber-50/20' : ''
+                              }`}
+                            >
+                              <td className="py-4 px-5 whitespace-nowrap font-mono text-xs text-slate-600 align-top">
+                                <span className="font-bold text-slate-900 block">
+                                  {new Date(reg.created_at).toLocaleDateString('es-AR')}
+                                </span>
+                                <span className="text-[11px] text-slate-400 block mt-0.5">
+                                  {new Date(reg.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
+                                </span>
+                              </td>
+
+                              <td className="py-4 px-5 align-top">
+                                <span className="font-extrabold text-slate-900 block text-xs">
+                                  {(reg as any).distrito || reg.tecnicos?.distrito || '-'}
+                                </span>
+                                <span className="inline-flex items-center gap-1 text-xs text-slate-600 font-semibold mt-1">
+                                  <Building className="h-3.5 w-3.5 text-indigo-500" /> {(reg as any).central || reg.tecnicos?.celula || '-'}
+                                </span>
+                              </td>
+
+                              <td className="py-4 px-5 align-top">
+                                <span className="font-extrabold text-slate-950 block text-sm">
+                                  {reg.tecnico_nombre}
+                                </span>
+                                <span className="font-mono text-xs text-slate-400 block mt-0.5">
+                                  Legajo: {reg.tecnico_legajo || '-'}
+                                </span>
+                              </td>
+
+                              <td className="py-4 px-5 align-top text-xs text-slate-600 font-semibold">
+                                {(reg as any).lider_nombre || reg.usuarios?.nombre || '-'}
+                              </td>
+
+                              <td className="py-4 px-6 align-top">
+                                {tieneObs ? (
+                                  <div className="bg-amber-50/90 border-2 border-amber-200/90 rounded-2xl p-4 shadow-sm text-slate-950 flex flex-col gap-2">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 bg-amber-200/60 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                        <ShieldAlert className="h-3 w-3 text-amber-700" /> Novedad Reportada
+                                      </span>
+                                      {reg.observaciones && reg.observaciones.length > 80 && (
+                                        <button
+                                          onClick={() => setObservacionModal(reg)}
+                                          className="text-[11px] font-extrabold text-indigo-700 hover:text-indigo-900 bg-white px-2 py-0.5 rounded border border-indigo-200 transition"
+                                        >
+                                          Ver Modal
+                                        </button>
+                                      )}
+                                    </div>
+                                    <p className="text-sm font-black text-slate-950 leading-relaxed whitespace-pre-wrap">
+                                      "{reg.observaciones}"
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
+                                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Sin novedad
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* VISTA MOBILE (CARDS VERTICALES CON OBSERVACIÓN COMO HÉROE PRINCIPAL) */}
+                  <div className="block md:hidden flex flex-col divide-y divide-slate-100">
+                    {listaObservacionesFinal.map((reg) => {
+                      const tieneObs = reg.observaciones && reg.observaciones.trim() !== '';
+
+                      return (
+                        <div key={reg.id} className="p-4 flex flex-col gap-3.5">
+                          {/* Encabezado contextual */}
+                          <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-2">
+                            <div>
+                              <h4 className="font-black text-slate-950 text-base leading-snug">
+                                {reg.tecnico_nombre}
+                              </h4>
+                              <p className="text-xs font-bold text-slate-500 mt-0.5">
+                                {(reg as any).distrito || reg.tecnicos?.distrito} • {(reg as any).central || reg.tecnicos?.celula}
+                              </p>
+                            </div>
+                            <span className="font-mono text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg shrink-0">
+                              {new Date(reg.created_at).toLocaleDateString('es-AR')}
                             </span>
-                          </td>
-                          <td className="py-4 px-6 font-bold text-slate-900 whitespace-nowrap">{(reg as any).distrito || reg.tecnicos?.distrito || '-'}</td>
-                          <td className="py-4 px-6 font-semibold text-slate-800 whitespace-nowrap">{(reg as any).central || reg.tecnicos?.celula || '-'}</td>
-                          <td className="py-4 px-6 whitespace-nowrap font-bold text-slate-900">{reg.tecnico_nombre}</td>
-                          <td className="py-4 px-6 whitespace-nowrap text-slate-600">{(reg as any).lider_nombre || reg.usuarios?.nombre || '-'}</td>
-                          <td className="py-4 px-6">
-                            <div className="flex items-center justify-between gap-3">
-                              <p className="text-slate-950 font-semibold bg-amber-50/70 border border-amber-200/60 p-2.5 rounded-xl text-xs leading-relaxed max-w-xl">
+                          </div>
+
+                          {/* BLOQUE HÉROE DE OBSERVACIÓN */}
+                          {tieneObs ? (
+                            <div className="bg-amber-50/90 border-2 border-amber-200 rounded-2xl p-4 shadow-sm text-slate-950 flex flex-col gap-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 bg-amber-200/60 px-2 py-0.5 rounded-md flex items-center gap-1">
+                                  <ShieldAlert className="h-3 w-3 text-amber-700" /> Novedad Reportada
+                                </span>
+                                {reg.observaciones && reg.observaciones.length > 80 && (
+                                  <button
+                                    onClick={() => setObservacionModal(reg)}
+                                    className="text-[11px] font-extrabold text-indigo-700 hover:text-indigo-900 bg-white px-2 py-0.5 rounded border border-indigo-200 transition"
+                                  >
+                                    Ver Modal
+                                  </button>
+                                )}
+                              </div>
+                              <p className="text-sm font-black text-slate-950 leading-relaxed whitespace-pre-wrap">
                                 "{reg.observaciones}"
                               </p>
-                              {reg.observaciones && reg.observaciones.length > 60 && (
-                                <button
-                                  onClick={() => setObservacionModal(reg)}
-                                  className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2.5 py-1.5 rounded-lg whitespace-nowrap transition"
-                                >
-                                  Ver Completa
-                                </button>
-                              )}
                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                          ) : (
+                            <div>
+                              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Sin novedad
+                              </span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                            <span>Líder: <strong className="text-slate-700 font-bold">{(reg as any).lider_nombre || reg.usuarios?.nombre || '-'}</strong></span>
+                            <span className="font-mono text-[10px] text-slate-400">
+                              {new Date(reg.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </div>
           </section>
