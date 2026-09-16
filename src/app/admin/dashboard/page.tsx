@@ -22,7 +22,8 @@ import {
   Eye,
   CalendarDays,
   FileText,
-  Trash2
+  Trash2,
+  TrendingUp
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
@@ -215,6 +216,12 @@ export default function AdminDashboardPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.push('/admin/analisis')}
+            className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95"
+          >
+            <TrendingUp className="h-4 w-4" /> Análisis Operativo
+          </button>
           <button
             onClick={fetchRegistros}
             className="p-2.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-50 active:scale-95 transition"
