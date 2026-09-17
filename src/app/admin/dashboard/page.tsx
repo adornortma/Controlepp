@@ -191,15 +191,23 @@ export default function AdminDashboardPage() {
         .delete()
         .eq('registro_id', registroId);
 
-      if (errorFotos) console.error('Error al eliminar fotos del registro:', errorFotos);
+      if (errorFotos) {
+        console.error('Error al eliminar fotos del registro:', errorFotos);
+        throw errorFotos;
+      }
 
-      // 2. Eliminar el registro principal
-      const { error: errorRegistro } = await supabase
+      // 2. Eliminar el registro principal (verificando que realmente se eliminen filas en DB)
+      const { data: deletedData, error: errorRegistro } = await supabase
         .from('registros')
-        .delete()
-        .eq('id', registroId);
+        .delete({ count: 'exact' })
+        .eq('id', registroId)
+        .select();
 
       if (errorRegistro) throw errorRegistro;
+
+      if (!deletedData || deletedData.length === 0) {
+        throw new Error('No se pudo borrar el registro en la base de datos. Por favor, ejecutá el script SQL de políticas RLS en Supabase.');
+      }
 
       // 3. Actualizar estado local
       setRegistros((prev) => prev.filter((r) => r.id !== registroId));
@@ -210,7 +218,7 @@ export default function AdminDashboardPage() {
       toast.success('Registro eliminado correctamente');
     } catch (err: any) {
       console.error('Error al eliminar el registro:', err);
-      toast.error('Error al eliminar el registro');
+      toast.error(err.message || 'Error al eliminar el registro');
     } finally {
       setEliminandoId(null);
     }
